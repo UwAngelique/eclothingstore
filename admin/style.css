@@ -1,0 +1,234 @@
+/* Product Form Styles */
+.progress-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    padding: 0 20px;
+}
+
+.progress-step {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    position: relative;
+    color: #6c757d;
+}
+
+.progress-step.active {
+    color: #d4af37;
+    font-weight: 600;
+}
+
+.progress-step::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    border: 2px solid #dee2e6;
+}
+
+.progress-step.active::before {
+    background-color: #d4af37;
+    border-color: #d4af37;
+}
+
+.form-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #d4af37;
+}
+
+.form-section h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.required {
+    color: #dc3545;
+}
+
+/* Size Selection Styles */
+.size-selection {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.size-option {
+    padding: 8px 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: white;
+    min-width: 40px;
+    text-align: center;
+}
+
+.size-option:hover {
+    border-color: #d4af37;
+    transform: translateY(-1px);
+}
+
+.size-option.selected {
+    background-color: #d4af37;
+    border-color: #d4af37;
+    color: white;
+}
+
+/* Color Selection Styles */
+.color-selection {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.color-option.selected {
+    border-color: #d4af37;
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.3);
+}
+
+.color-option.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+}
+
+/* Image Preview */
+.image-preview {
+    display: none;
+    max-width: 200px;
+    max-height: 200px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    object-fit: cover;
+}
+
+/* Button Styles */
+.btn-gold {
+    background: linear-gradient(135deg, #d4af37, #f1c40f);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-gold:hover {
+    background: linear-gradient(135deg, #b8941f, #d4af37);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    color: white;
+}
+
+.btn-outline-gold {
+    border: 2px solid #d4af37;
+    color: #d4af37;
+    background: transparent;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-gold:hover {
+    background: #d4af37;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Form Input Enhancements */
+.form-control:focus,
+.form-select:focus {
+    border-color: #d4af37;
+    box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #6c757d;
+}
+
+/* Checkbox Styles */
+.form-check-input:checked {
+    background-color: #d4af37;
+    border-color: #d4af37;
+}
+
+.form-check-input:focus {
+    border-color: #d4af37;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(212, 175, 55, 0.25);
+}
+
+/* Modal Enhancements */
+.modal-xl {
+    max-width: 1200px;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border-bottom: 2px solid #d4af37;
+}
+
+.modal-title {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .size-selection,
+    .color-selection {
+        justify-content: center;
+    }
+    
+    .progress-indicator {
+        padding: 0 10px;
+    }
+    
+    .progress-step {
+        font-size: 14px;
+    }
+    
+    .form-section {
+        padding: 15px;
+    }
+}
