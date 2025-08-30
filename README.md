@@ -1,31 +1,26 @@
+Online Clothes Store (with Ordering System)
 
-# Art Gallery Management System using PHP/MySQLi
+Overview
+A PHP + MySQL e-commerce  for clothing. Includes an admin dashboard for managing categories and products, and a public storefront with cart, checkout, and order tracking.
 
-<div align="center"><img src="art.png" /></div>
+Key Features
 
-### Description
+Category management: name, description, status, image
 
-The Art Gallery Management System with Simple CMS website using PHP/MySQL is a simple project that will help a certain gallery to manage their paintings or sculptures in their business. The main purpose of this project is to help the art gallery business market their arts online using their own website. This system includes upcoming events advertisement of an artist that rented the gallery to hep also their client, and this feature of the system may also use by the art gallery business to announce their own events.
+Product management: SKU, brand, description, price/sale/cost, quantity, low-stock alert, status, sizes, colors, tags, weight, material, season, image upload
 
-### Features
+Storefront: search, filters, stock badges (in/low/out)
 
-<ul>
-  <li><strong>Manage Arts List</strong></li>
-  <li><strong>Manage Artist List</strong></li>
-  <li><strong>Manage Events</strong></li>
-  <li><strong>Manage Arts for Sale</strong></li>
-  <li><strong>Manage Orders</strong></li>
-  <li><strong>Manage Users</strong></li>
-  <li><strong>Visitor's Page</strong></li>
-</ul>
+Cart & Checkout: session-based cart, guest checkout, simple shipping & tax calculation
 
-Visit [sourcecodester.com](https://www.sourcecodester.com/php/14503/art-gallery-management-system-using-phpmysql-source-code.html) for more details about this Project.
+Orders: order creation, order items, totals, statuses (Pending, Paid, Packed, Shipped, Delivered, Canceled)
 
-### Website Info
+Admin Orders: list/filter orders, update status, view items & customer details
 
-| Title | Art Gallery Management System using PHP/MySQL with Source Code |
-|:--|:--|
-| Website | [www.sourcecodester.com](https://www.sourcecodester.com) |
-| Link | https://www.sourcecodester.com/php/14503/art-gallery-management-system-using-phpmysql-source-code.html |
-| Language | PHP |
-| Uploader/Developer | [oretnom23](https://www.sourcecodester.com/users/tips23) |
+(Optional) Accounts: customer registration/login and order history
+
+Tech Stack
+
+PHP 8+
+
+MySQL 5.7+ (or 8.x; JSON columns supported)
