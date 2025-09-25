@@ -1,9 +1,10 @@
 <?php
 // order_view.php — lists items for a specific order (works in modal or standalone)
 include __DIR__ . '/db_connect.php';
-
-function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
-function money($n){ return '$' . number_format((float)$n, 2); }
+// function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+// function money($n){ return 'RWF' . number_format((float)$n, 2); }
+// function h($v){ return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'); }
+// function money($n){ return '$' . number_format((float)$n, 2); }
 
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) { echo "<div class='p-3 text-center text-danger'>Invalid order id</div>"; exit; }

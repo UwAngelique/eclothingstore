@@ -170,7 +170,7 @@ $stats = getDynamicStats($pdo, $available_tables, $date_from, $date_to);
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>Shades Beauty Admin Dashboard</title>
+    <title>Fashion Store Admin Dashboard</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
@@ -664,8 +664,7 @@ $stats = getDynamicStats($pdo, $available_tables, $date_from, $date_to);
             <div class="sidebar-header">
                 <a href="#" class="logo" onclick="showPage('dashboard')">
                     <i class="fas fa-tshirt"></i>
-                     <!-- <img src="images/logo.png" alt="Logo" style="width:100%;"> -->
-                    <span>Shades Beauty</span>
+                    <span>Fashion Store</span>
                 </a>
                 <button class="sidebar-toggle" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
@@ -733,7 +732,7 @@ $stats = getDynamicStats($pdo, $available_tables, $date_from, $date_to);
                         <i class="fas fa-bars"></i>
                     </button>
                     <div>
-                        <h4 id="pageTitle">Shades Beauty Dashboard</h4>
+                        <h4 id="pageTitle">Fashion Store Dashboard</h4>
                         <small id="currentDate"></small>
                     </div>
                 </div>
@@ -1216,7 +1215,7 @@ $stats = getDynamicStats($pdo, $available_tables, $date_from, $date_to);
             }
 
             const pageTitles = {
-                'dashboard': 'Shades Beauty Dashboard',
+                'dashboard': 'Fashion Store Dashboard',
                 'inventory': 'Inventory Management',
                 'orders': 'Orders Management',
                 'customers': 'Customer Management',
@@ -1226,7 +1225,7 @@ $stats = getDynamicStats($pdo, $available_tables, $date_from, $date_to);
                 'reports': 'Sales Reports'
             };
 
-            document.getElementById('pageTitle').textContent = pageTitles[pageName] || 'Shades Beauty Admin';
+            document.getElementById('pageTitle').textContent = pageTitles[pageName] || 'Fashion Store Admin';
 
             const pagesWithDynamicContent = ['inventory', 'orders', 'customers', 'enquiries', 'reviews', 'coupons', 'reports'];
 

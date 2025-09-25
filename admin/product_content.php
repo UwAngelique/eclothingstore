@@ -1,5 +1,5 @@
 <?php
-// product_content.php - Enhanced with pagination and search functionality
+// product_content.php - Complete functional version for dashboard integration
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -7,9 +7,6 @@ include 'db_connect.php';
 
 $message = '';
 $message_type = '';
-
-// Pagination settings
-$items_per_page = 10;
 
 // Handle success messages from redirects
 if (isset($_GET['success'])) {
@@ -120,136 +117,6 @@ function csv_to_json_or_null(?string $csv): ?string {
     return $json ?: null;
 }
 
-/**
- * Build search and filter conditions for categories
- */
-function buildCategoryQuery($search = '', $status = '', $page = 1, $limit = 10) {
-    global $conn;
-    
-    $conditions = [];
-    $params = [];
-    $types = '';
-    
-    if (!empty($search)) {
-        $conditions[] = "(category_name LIKE ? OR description LIKE ?)";
-        $params[] = "%$search%";
-        $params[] = "%$search%";
-        $types .= 'ss';
-    }
-    
-    if (!empty($status)) {
-        $conditions[] = "status = ?";
-        $params[] = $status;
-        $types .= 's';
-    }
-    
-    $whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
-    $offset = ($page - 1) * $limit;
-    
-    // Get total count
-    $countSql = "SELECT COUNT(*) as total FROM categories $whereClause";
-    $countStmt = $conn->prepare($countSql);
-    if (!empty($params)) {
-        $countStmt->bind_param($types, ...$params);
-    }
-    $countStmt->execute();
-    $totalResult = $countStmt->get_result()->fetch_assoc();
-    $total = $totalResult['total'];
-    $countStmt->close();
-    
-    // Get data
-    $dataSql = "SELECT * FROM categories $whereClause ORDER BY created_at DESC LIMIT ? OFFSET ?";
-    $dataParams = array_merge($params, [$limit, $offset]);
-    $dataTypes = $types . 'ii';
-    
-    $dataStmt = $conn->prepare($dataSql);
-    $dataStmt->bind_param($dataTypes, ...$dataParams);
-    $dataStmt->execute();
-    $result = $dataStmt->get_result();
-    
-    $data = [];
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-    $dataStmt->close();
-    
-    return [
-        'data' => $data,
-        'total' => $total,
-        'pages' => ceil($total / $limit),
-        'current_page' => $page
-    ];
-}
-
-/**
- * Build search and filter conditions for products
- */
-function buildProductQuery($search = '', $category = '', $status = '', $page = 1, $limit = 10) {
-    global $conn;
-    
-    $conditions = [];
-    $params = [];
-    $types = '';
-    
-    if (!empty($search)) {
-        $conditions[] = "(product_name LIKE ? OR sku LIKE ? OR brand LIKE ? OR description LIKE ?)";
-        $params[] = "%$search%";
-        $params[] = "%$search%";
-        $params[] = "%$search%";
-        $params[] = "%$search%";
-        $types .= 'ssss';
-    }
-    
-    if (!empty($category)) {
-        $conditions[] = "category = ?";
-        $params[] = $category;
-        $types .= 's';
-    }
-    
-    if (!empty($status)) {
-        $conditions[] = "status = ?";
-        $params[] = $status;
-        $types .= 's';
-    }
-    
-    $whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
-    $offset = ($page - 1) * $limit;
-    
-    // Get total count
-    $countSql = "SELECT COUNT(*) as total FROM products $whereClause";
-    $countStmt = $conn->prepare($countSql);
-    if (!empty($params)) {
-        $countStmt->bind_param($types, ...$params);
-    }
-    $countStmt->execute();
-    $totalResult = $countStmt->get_result()->fetch_assoc();
-    $total = $totalResult['total'];
-    $countStmt->close();
-    
-    // Get data
-    $dataSql = "SELECT * FROM products $whereClause ORDER BY created_at DESC LIMIT ? OFFSET ?";
-    $dataParams = array_merge($params, [$limit, $offset]);
-    $dataTypes = $types . 'ii';
-    
-    $dataStmt = $conn->prepare($dataSql);
-    $dataStmt->bind_param($dataTypes, ...$dataParams);
-    $dataStmt->execute();
-    $result = $dataStmt->get_result();
-    
-    $data = [];
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-    $dataStmt->close();
-    
-    return [
-        'data' => $data,
-        'total' => $total,
-        'pages' => ceil($total / $limit),
-        'current_page' => $page
-    ];
-}
-
 // Handle Category Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_category'])) {
     $categoryName = trim($_POST['category_name'] ?? '');
@@ -270,6 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_category'])) {
         $checkStmt->close();
 
         if ($count > 0) {
+            // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode("Category already exists!"));
             header("Location: index_1.php?page=inventory&success=category");
             exit();
         } else {
@@ -277,16 +145,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_category'])) {
             $stmt->bind_param("ssss", $categoryName, $status, $description, $categoryImage);
             if ($stmt->execute()) {
                 $stmt->close();
+                // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&success=category");
                 header("Location: index_1.php?page=inventory&success=category");
                 exit();
             } else {
                 $stmt->close();
+                // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode("Database error occurred"));
                 header("Location: index_1.php?page=inventory&error=" . urlencode("Database error occurred"));
                 exit();
             }
         }
     } else {
         $errorMessage = implode(", ", $errors);
+        // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode($errorMessage));
         header("Location: index_1.php?page=inventory&error=" . urlencode($errorMessage));
         exit();
     }
@@ -317,6 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product'])) {
         $checkStmt->close();
 
         if ($count > 0) {
+            // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode("SKU already exists!"));
             header("Location: index_1.php?page=inventory&error=" . urlencode("SKU already exists!"));
             exit();
         } else {
@@ -357,39 +229,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product'])) {
             
             if ($stmt->execute()) {
                 $stmt->close();
+                // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&success=product");
                 header("Location: index_1.php?page=inventory&success=product");
                 exit();
             } else {
                 $stmt->close();
+                // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode("Database error occurred"));
                 header("Location: index_1.php?page=inventory&error=" . urlencode("Database error occurred"));
                 exit();
             }
         }
     } else {
         $errorMessage = implode(", ", $errors);
+        // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode($errorMessage));
         header("Location: index_1.php?page=inventory&error=" . urlencode($errorMessage));
         exit();
     }
 }
 
-// Get search and filter parameters
-$category_search = $_GET['category_search'] ?? '';
-$category_status = $_GET['category_status'] ?? '';
-$category_page = max(1, (int)($_GET['category_page'] ?? 1));
-
-$product_search = $_GET['product_search'] ?? '';
-$product_category = $_GET['product_category'] ?? '';
-$product_status = $_GET['product_status'] ?? '';
-$product_page = max(1, (int)($_GET['product_page'] ?? 1));
-
-// Fetch data for forms
+// Fetch data for forms/tables
 $categories = [];
 $res = $conn->query("SELECT id, category_name FROM categories WHERE status = 'active' ORDER BY category_name");
 if ($res) { while ($row = $res->fetch_assoc()) { $categories[] = $row; } }
 
-// Get paginated data
-$category_results = buildCategoryQuery($category_search, $category_status, $category_page, $items_per_page);
-$product_results = buildProductQuery($product_search, $product_category, $product_status, $product_page, $items_per_page);
+$display_categories = [];
+$res = $conn->query("SELECT * FROM categories ORDER BY created_at DESC");
+if ($res) { while ($row = $res->fetch_assoc()) { $display_categories[] = $row; } }
+
+$display_products = [];
+$res = $conn->query("SELECT * FROM products ORDER BY created_at DESC");
+if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
 ?>
 
 <style>
@@ -654,66 +523,6 @@ $product_results = buildProductQuery($product_search, $product_category, $produc
         border: 1px solid #ef4444;
     }
 
-    /* Pagination Styles */
-    .pagination-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 1.5rem;
-        padding: 1rem 0;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    .pagination-info {
-        color: #6b7280;
-        font-size: 0.875rem;
-    }
-
-    .pagination {
-        display: flex;
-        list-style: none;
-        gap: 0.25rem;
-        margin: 0;
-        padding: 0;
-    }
-
-    .pagination .page-link {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        color: #6b7280;
-        text-decoration: none;
-        font-size: 0.875rem;
-        transition: all 0.2s ease;
-        min-width: 2.5rem;
-    }
-
-    .pagination .page-link:hover {
-        background: #f3f4f6;
-        border-color: #d1d5db;
-        color: #374151;
-    }
-
-    .pagination .page-item.active .page-link {
-        background: #2563eb;
-        border-color: #2563eb;
-        color: #ffffff;
-    }
-
-    .pagination .page-item.disabled .page-link {
-        color: #d1d5db;
-        cursor: not-allowed;
-    }
-
-    .pagination .page-item.disabled .page-link:hover {
-        background: transparent;
-        border-color: #e5e7eb;
-        color: #d1d5db;
-    }
-
     /* Enhanced Modal Styles */
     .modal {
         position: fixed;
@@ -966,12 +775,6 @@ $product_results = buildProductQuery($product_search, $product_category, $produc
         .inventory-container {
             padding: 0.5rem;
         }
-
-        .pagination-container {
-            flex-direction: column;
-            gap: 1rem;
-            text-align: center;
-        }
     }
 </style>
 
@@ -1010,35 +813,20 @@ $product_results = buildProductQuery($product_search, $product_category, $produc
                     </button>
                 </div>
 
-                <!-- Search and Filter -->
+                <!-- Search -->
                 <div class="search-section">
-                    <form method="GET" id="categorySearchForm">
-                        <input type="hidden" name="page" value="inventory">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <input type="text" class="form-control" name="category_search" 
-                                       placeholder="Search categories..." 
-                                       value="<?= htmlspecialchars($category_search) ?>">
-                            </div>
-                            <div class="col-md-3">
-                                <select class="form-select" name="category_status">
-                                    <option value="">All Status</option>
-                                    <option value="active" <?= $category_status === 'active' ? 'selected' : '' ?>>Active</option>
-                                    <option value="inactive" <?= $category_status === 'inactive' ? 'selected' : '' ?>>Inactive</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-primary-custom">
-                                    <i class="fas fa-search me-2"></i>Search
-                                </button>
-                                <?php if ($category_search || $category_status): ?>
-                                    <a href="?page=inventory" class="btn btn-outline-custom ms-2">
-                                        <i class="fas fa-times me-2"></i>Clear
-                                    </a>
-                                <?php endif; ?>
-                            </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" placeholder="Search categories..." id="categorySearch">
                         </div>
-                    </form>
+                        <div class="col-md-4">
+                            <select class="form-select" id="categoryFilter">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Categories Table -->
@@ -1055,19 +843,14 @@ $product_results = buildProductQuery($product_search, $product_category, $produc
                             </tr>
                         </thead>
                         <tbody>
-                        <?php if (empty($category_results['data'])): ?>
+                        <?php if (empty($display_categories)): ?>
                             <tr>
                                 <td colspan="6" style="text-align: center; padding: 2rem; color: #6b7280;">
-                                    <?php if ($category_search || $category_status): ?>
-                                        No categories found matching your search criteria.
-                                        <a href="?page=inventory" style="color: #2563eb;">Clear filters</a>
-                                    <?php else: ?>
-                                        No categories found. <a href="#" onclick="openModal('addCategoryModal')" style="color: #2563eb;">Add your first category</a>
-                                    <?php endif; ?>
+                                    No categories found. <a href="#" onclick="openModal('addCategoryModal')" style="color: #2563eb;">Add your first category</a>
                                 </td>
                             </tr>
                         <?php else: ?>
-                            <?php foreach ($category_results['data'] as $category): ?>
+                            <?php foreach ($display_categories as $category): ?>
                                 <tr>
                                     <td>
                                         <?php if ($category['category_image']): ?>
@@ -1093,63 +876,6 @@ $product_results = buildProductQuery($product_search, $product_category, $produc
                         <?php endif; ?>
                         </tbody>
                     </table>
-                    
-                    <!-- Categories Pagination -->
-                    <?php if ($category_results['total'] > 0): ?>
-                        <div class="pagination-container">
-                            <div class="pagination-info">
-                                Showing <?= (($category_results['current_page'] - 1) * $items_per_page) + 1 ?> to 
-                                <?= min($category_results['current_page'] * $items_per_page, $category_results['total']) ?> 
-                                of <?= $category_results['total'] ?> categories
-                            </div>
-                            
-                            <?php if ($category_results['pages'] > 1): ?>
-                                <nav aria-label="Categories pagination">
-                                    <ul class="pagination">
-                                        <li class="page-item <?= $category_results['current_page'] <= 1 ? 'disabled' : '' ?>">
-                                            <a class="page-link" href="?page=inventory&category_page=<?= max(1, $category_results['current_page'] - 1) ?>&category_search=<?= urlencode($category_search) ?>&category_status=<?= urlencode($category_status) ?>">
-                                                <i class="fas fa-chevron-left"></i>
-                                            </a>
-                                        </li>
-                                        
-                                        <?php
-                                        $start = max(1, $category_results['current_page'] - 2);
-                                        $end = min($category_results['pages'], $category_results['current_page'] + 2);
-                                        
-                                        if ($start > 1): ?>
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page=inventory&category_page=1&category_search=<?= urlencode($category_search) ?>&category_status=<?= urlencode($category_status) ?>">1</a>
-                                            </li>
-                                            <?php if ($start > 2): ?>
-                                                <li class="page-item disabled"><span class="page-link">...</span></li>
-                                            <?php endif;
-                                        endif;
-                                        
-                                        for ($i = $start; $i <= $end; $i++): ?>
-                                            <li class="page-item <?= $i === $category_results['current_page'] ? 'active' : '' ?>">
-                                                <a class="page-link" href="?page=inventory&category_page=<?= $i ?>&category_search=<?= urlencode($category_search) ?>&category_status=<?= urlencode($category_status) ?>"><?= $i ?></a>
-                                            </li>
-                                        <?php endfor;
-                                        
-                                        if ($end < $category_results['pages']): ?>
-                                            <?php if ($end < $category_results['pages'] - 1): ?>
-                                                <li class="page-item disabled"><span class="page-link">...</span></li>
-                                            <?php endif; ?>
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page=inventory&category_page=<?= $category_results['pages'] ?>&category_search=<?= urlencode($category_search) ?>&category_status=<?= urlencode($category_status) ?>"><?= $category_results['pages'] ?></a>
-                                            </li>
-                                        <?php endif; ?>
-                                        
-                                        <li class="page-item <?= $category_results['current_page'] >= $category_results['pages'] ? 'disabled' : '' ?>">
-                                            <a class="page-link" href="?page=inventory&category_page=<?= min($category_results['pages'], $category_results['current_page'] + 1) ?>&category_search=<?= urlencode($category_search) ?>&category_status=<?= urlencode($category_status) ?>">
-                                                <i class="fas fa-chevron-right"></i>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1164,49 +890,6 @@ $product_results = buildProductQuery($product_search, $product_category, $produc
                     <button class="btn btn-primary-custom" onclick="openModal('addProductModal')">
                         <i class="fas fa-plus me-2"></i>Add Product
                     </button>
-                </div>
-
-                <!-- Search and Filter -->
-                <div class="search-section">
-                    <form method="GET" id="productSearchForm">
-                        <input type="hidden" name="page" value="inventory">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <input type="text" class="form-control" name="product_search" 
-                                       placeholder="Search products..." 
-                                       value="<?= htmlspecialchars($product_search) ?>">
-                            </div>
-                            <div class="col-md-3">
-                                <select class="form-select" name="product_category">
-                                    <option value="">All Categories</option>
-                                    <?php foreach ($categories as $category): ?>
-                                        <option value="<?= htmlspecialchars($category['category_name']) ?>" 
-                                                <?= $product_category === $category['category_name'] ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($category['category_name']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select" name="product_status">
-                                    <option value="">All Status</option>
-                                    <option value="active" <?= $product_status === 'active' ? 'selected' : '' ?>>Active</option>
-                                    <option value="inactive" <?= $product_status === 'inactive' ? 'selected' : '' ?>>Inactive</option>
-                                    <option value="draft" <?= $product_status === 'draft' ? 'selected' : '' ?>>Draft</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-primary-custom">
-                                    <i class="fas fa-search me-2"></i>Search
-                                </button>
-                                <?php if ($product_search || $product_category || $product_status): ?>
-                                    <a href="?page=inventory" class="btn btn-outline-custom ms-2">
-                                        <i class="fas fa-times me-2"></i>Clear
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </form>
                 </div>
 
                 <!-- Products Table -->
@@ -1224,19 +907,14 @@ $product_results = buildProductQuery($product_search, $product_category, $produc
                             </tr>
                         </thead>
                         <tbody>
-                        <?php if (empty($product_results['data'])): ?>
+                        <?php if (empty($display_products)): ?>
                             <tr>
                                 <td colspan="7" style="text-align: center; padding: 2rem; color: #6b7280;">
-                                    <?php if ($product_search || $product_category || $product_status): ?>
-                                        No products found matching your search criteria.
-                                        <a href="?page=inventory" style="color: #2563eb;">Clear filters</a>
-                                    <?php else: ?>
-                                        No products found. <a href="#" onclick="openModal('addProductModal')" style="color: #2563eb;">Add your first product</a>
-                                    <?php endif; ?>
+                                    No products found. <a href="#" onclick="openModal('addProductModal')" style="color: #2563eb;">Add your first product</a>
                                 </td>
                             </tr>
                         <?php else: ?>
-                            <?php foreach ($product_results['data'] as $product): ?>
+                            <?php foreach ($display_products as $product): ?>
                                 <tr>
                                     <td>
                                         <?php if ($product['product_image']): ?>
@@ -1282,63 +960,6 @@ $product_results = buildProductQuery($product_search, $product_category, $produc
                         <?php endif; ?>
                         </tbody>
                     </table>
-                    
-                    <!-- Products Pagination -->
-                    <?php if ($product_results['total'] > 0): ?>
-                        <div class="pagination-container">
-                            <div class="pagination-info">
-                                Showing <?= (($product_results['current_page'] - 1) * $items_per_page) + 1 ?> to 
-                                <?= min($product_results['current_page'] * $items_per_page, $product_results['total']) ?> 
-                                of <?= $product_results['total'] ?> products
-                            </div>
-                            
-                            <?php if ($product_results['pages'] > 1): ?>
-                                <nav aria-label="Products pagination">
-                                    <ul class="pagination">
-                                        <li class="page-item <?= $product_results['current_page'] <= 1 ? 'disabled' : '' ?>">
-                                            <a class="page-link" href="?page=inventory&product_page=<?= max(1, $product_results['current_page'] - 1) ?>&product_search=<?= urlencode($product_search) ?>&product_category=<?= urlencode($product_category) ?>&product_status=<?= urlencode($product_status) ?>">
-                                                <i class="fas fa-chevron-left"></i>
-                                            </a>
-                                        </li>
-                                        
-                                        <?php
-                                        $start = max(1, $product_results['current_page'] - 2);
-                                        $end = min($product_results['pages'], $product_results['current_page'] + 2);
-                                        
-                                        if ($start > 1): ?>
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page=inventory&product_page=1&product_search=<?= urlencode($product_search) ?>&product_category=<?= urlencode($product_category) ?>&product_status=<?= urlencode($product_status) ?>">1</a>
-                                            </li>
-                                            <?php if ($start > 2): ?>
-                                                <li class="page-item disabled"><span class="page-link">...</span></li>
-                                            <?php endif;
-                                        endif;
-                                        
-                                        for ($i = $start; $i <= $end; $i++): ?>
-                                            <li class="page-item <?= $i === $product_results['current_page'] ? 'active' : '' ?>">
-                                                <a class="page-link" href="?page=inventory&product_page=<?= $i ?>&product_search=<?= urlencode($product_search) ?>&product_category=<?= urlencode($product_category) ?>&product_status=<?= urlencode($product_status) ?>"><?= $i ?></a>
-                                            </li>
-                                        <?php endfor;
-                                        
-                                        if ($end < $product_results['pages']): ?>
-                                            <?php if ($end < $product_results['pages'] - 1): ?>
-                                                <li class="page-item disabled"><span class="page-link">...</span></li>
-                                            <?php endif; ?>
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page=inventory&product_page=<?= $product_results['pages'] ?>&product_search=<?= urlencode($product_search) ?>&product_category=<?= urlencode($product_category) ?>&product_status=<?= urlencode($product_status) ?>"><?= $product_results['pages'] ?></a>
-                                            </li>
-                                        <?php endif; ?>
-                                        
-                                        <li class="page-item <?= $product_results['current_page'] >= $product_results['pages'] ? 'disabled' : '' ?>">
-                                            <a class="page-link" href="?page=inventory&product_page=<?= min($product_results['pages'], $product_results['current_page'] + 1) ?>&product_search=<?= urlencode($product_search) ?>&product_category=<?= urlencode($product_category) ?>&product_status=<?= urlencode($product_status) ?>">
-                                                <i class="fas fa-chevron-right"></i>
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </nav>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -1349,7 +970,8 @@ $product_results = buildProductQuery($product_search, $product_category, $produc
 <div class="modal" id="addCategoryModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" enctype="multipart/form-data" action="product_content.php">
+            <!-- <form method="POST" enctype="multipart/form-data" action="?page=inventory"> -->
+                <form method="POST" enctype="multipart/form-data" action="product_content.php">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Add New Category</h5>
                     <button type="button" class="btn-close" onclick="closeModal('addCategoryModal')">&times;</button>
@@ -1397,7 +1019,8 @@ $product_results = buildProductQuery($product_search, $product_category, $produc
 <div class="modal modal-xl" id="addProductModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form method="POST" enctype="multipart/form-data" id="addProductForm" action="product_content.php">
+            <!-- <form method="POST" enctype="multipart/form-data" id="addProductForm" action="?page=inventory"> -->
+                <form method="POST" enctype="multipart/form-data" id="addProductForm" action="product_content.php">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Add New Product</h5>
                     <button type="button" class="btn-close" onclick="closeModal('addProductModal')">&times;</button>
@@ -1800,60 +1423,9 @@ function initializeAlerts() {
     }
 }
 
-// Real-time search functionality
-function initializeRealTimeSearch() {
-    // Category search
-    const categorySearchInput = document.querySelector('input[name="category_search"]');
-    const categoryStatusSelect = document.querySelector('select[name="category_status"]');
-    
-    if (categorySearchInput || categoryStatusSelect) {
-        let categorySearchTimer;
-        
-        function triggerCategorySearch() {
-            clearTimeout(categorySearchTimer);
-            categorySearchTimer = setTimeout(() => {
-                document.getElementById('categorySearchForm').submit();
-            }, 500); // 500ms delay for typing
-        }
-        
-        if (categorySearchInput) {
-            categorySearchInput.addEventListener('input', triggerCategorySearch);
-        }
-        if (categoryStatusSelect) {
-            categoryStatusSelect.addEventListener('change', triggerCategorySearch);
-        }
-    }
-    
-    // Product search
-    const productSearchInput = document.querySelector('input[name="product_search"]');
-    const productCategorySelect = document.querySelector('select[name="product_category"]');
-    const productStatusSelect = document.querySelector('select[name="product_status"]');
-    
-    if (productSearchInput || productCategorySelect || productStatusSelect) {
-        let productSearchTimer;
-        
-        function triggerProductSearch() {
-            clearTimeout(productSearchTimer);
-            productSearchTimer = setTimeout(() => {
-                document.getElementById('productSearchForm').submit();
-            }, 500); // 500ms delay for typing
-        }
-        
-        if (productSearchInput) {
-            productSearchInput.addEventListener('input', triggerProductSearch);
-        }
-        if (productCategorySelect) {
-            productCategorySelect.addEventListener('change', triggerProductSearch);
-        }
-        if (productStatusSelect) {
-            productStatusSelect.addEventListener('change', triggerProductSearch);
-        }
-    }
-}
-
 // Initialize all functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Initializing enhanced inventory management...');
+    console.log('Initializing inventory management...');
     
     initializeTabs();
     initializeImagePreview();
@@ -1862,9 +1434,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeColorSelection();
     initializeModalEvents();
     initializeAlerts();
-    initializeRealTimeSearch();
     
-    console.log('Enhanced inventory management initialized successfully');
+    console.log('Inventory management initialized successfully');
 });
 
 // Placeholder functions for edit/delete actions

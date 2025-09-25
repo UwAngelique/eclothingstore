@@ -514,7 +514,7 @@
                                         <div class="card-icon">
                                             <i class="fas fa-tshirt"></i>
                                         </div>
-                                        <div class="card-number" id="total-products">245</div>
+                                        <div class="card-number" id="total-products">2</div>
                                         <div class="card-title">Total Products</div>
                                     </div>
                                 </div>
@@ -527,7 +527,7 @@
                                         <div class="card-icon">
                                             <i class="fas fa-users"></i>
                                         </div>
-                                        <div class="card-number" id="total-customers">1,247</div>
+                                        <div class="card-number" id="total-customers">1</div>
                                         <div class="card-title">Total Customers</div>
                                     </div>
                                 </div>
@@ -540,7 +540,7 @@
                                         <div class="card-icon">
                                             <i class="fas fa-exclamation-triangle"></i>
                                         </div>
-                                        <div class="card-number" id="low-stock-items">8</div>
+                                        <div class="card-number" id="low-stock-items">10</div>
                                         <div class="card-title">Low Stock Items</div>
                                     </div>
                                 </div>
@@ -553,7 +553,7 @@
                                         <div class="card-icon">
                                             <i class="fas fa-shopping-bag"></i>
                                         </div>
-                                        <div class="card-number" id="new-orders">23</div>
+                                        <div class="card-number" id="new-orders">2</div>
                                         <div class="card-title">New Orders</div>
                                     </div>
                                 </div>
@@ -565,7 +565,7 @@
                                         <div class="card-icon">
                                             <i class="fas fa-clock"></i>
                                         </div>
-                                        <div class="card-number" id="pending-orders">15</div>
+                                        <div class="card-number" id="pending-orders">1</div>
                                         <div class="card-title">Pending Orders</div>
                                     </div>
                                 </div>
@@ -577,7 +577,7 @@
                                         <div class="card-icon">
                                             <i class="fas fa-check-circle"></i>
                                         </div>
-                                        <div class="card-number" id="delivered-orders">156</div>
+                                        <div class="card-number" id="delivered-orders">1</div>
                                         <div class="card-title">Completed Orders</div>
                                     </div>
                                 </div>
@@ -589,7 +589,7 @@
                                         <div class="card-icon">
                                             <i class="fas fa-dollar-sign"></i>
                                         </div>
-                                        <div class="card-number" id="today-revenue">$2,456</div>
+                                        <div class="card-number" id="today-revenue">RWF 2,456</div>
                                         <div class="card-title">Today's Revenue</div>
                                     </div>
                                 </div>
@@ -601,7 +601,7 @@
                                         <div class="card-icon">
                                             <i class="fas fa-chart-line"></i>
                                         </div>
-                                        <div class="card-number" id="monthly-revenue">$48,925</div>
+                                        <div class="card-number" id="monthly-revenue">RWF 48,925</div>
                                         <div class="card-title">Monthly Revenue</div>
                                     </div>
                                 </div>

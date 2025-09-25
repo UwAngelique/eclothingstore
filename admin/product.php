@@ -724,8 +724,8 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
         <?php endif; ?>
 
         <!-- Page Header -->
-        <div class="page-header">
-            <div class="d-flex justify-content-between align-items-center">
+        <!-- <div class="page-header"> -->
+            <!-- <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="page-title">Inventory Management</h1>
                     <p class="page-subtitle">Manage your fashion categories and products</p>
@@ -738,8 +738,8 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
                         <i class="fas fa-upload me-2"></i>Import
                     </button>
                 </div>
-            </div>
-        </div>
+            </div> -->
+        <!-- </div> -->
 
         <!-- Tabs -->
         <ul class="nav nav-tabs" id="managementTabs" role="tablist">
@@ -955,6 +955,7 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form method="POST" enctype="multipart/form-data">
+                    <form method="POST" enctype="multipart/form-data" action="product_content.php">
                     <div class="modal-header">
                         <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Add New Category</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
