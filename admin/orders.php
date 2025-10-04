@@ -22,265 +22,849 @@ $sql = "
 ";
 $res  = $conn->query($sql);
 $rows = $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
-
-function status_pill($s){
-  $s = strtolower((string)$s);
-  $map = [
-    'pending'=>'bg-pending',
-    'paid'=>'bg-paid',
-    'shipped'=>'bg-shipped',
-    'cancelled'=>'bg-cancelled',
-    'refunded'=>'bg-refunded',
-    'invoice'=>'bg-invoice'
-  ];
-  $cls = $map[$s] ?? 'bg-unknown';
-  return '<span class="pill '.$cls.'">'.h(strtoupper($s)).'</span>';
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Orders</title>
+<title>Orders Management</title>
 <style>
-body { font-family:'Inter',sans-serif; background:#f3f4f6; color:#0f172a; margin:0; }
-.card { border-radius:1rem; box-shadow:0 10px 25px rgba(0,0,0,.05); margin:20px; padding:0; }
-.table { width:100%; border-collapse:collapse; }
-.table th, .table td { padding:8px 12px; text-align:left; }
-.table tbody tr:hover { transform:translateY(-2px); box-shadow:0 10px 20px rgba(0,0,0,.08); transition:.2s; }
-.pill { padding:.4rem .75rem; border-radius:50px; font-weight:600; font-size:.8rem; }
-.chip { border-radius:50px; padding:.4rem .8rem; font-size:.85rem; font-weight:500; cursor:pointer; transition:.2s; border:1px solid #ddd; margin:2px; }
-.chip.view { background:linear-gradient(135deg,#06b6d4,#3b82f6); color:#fff; border:none; }
-.chip.invoice { background:linear-gradient(135deg,#06b6d4,#3b82f6); color:#fff; border:none; }
-.chip.del { background:#fff; color:#ef4444; border:1px solid #fecaca; }
-.bg-invoice { background:#3b82f6; color:#fff; padding:.3rem .7rem; border-radius:50px; font-weight:600; font-size:.8rem; }
-.modal-bg { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.5); z-index:9998; justify-content:center; align-items:center; }
-/* .modal-content { background:#fff; padding:20px; border-radius:12px; width:90%; max-width:400px; text-align:center; } */
-.modal-content { 
-  background:#fff; 
-  padding:20px; 
-  margin-top:50px;;
-  /* border-radius:12px;  */
-  width:95%;       /* almost full width on small screens */
-  max-width:900px; /* wider on large screens */
-  text-align:center; 
-  overflow-x:auto; /* scroll if table is wide */
+* { box-sizing: border-box; }
+body { 
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+  background: #f3f4f6; 
+  color: #0f172a; 
+  margin: 0; 
+  padding: 0;
 }
-.modal-content table { 
-  width:100%; 
-  border-collapse:collapse; 
-  table-layout:auto; 
+.wrap { 
+  max-width: 1400px; 
+  margin: 0 auto; 
+  padding: 20px;
 }
-.modal-content table {
-  width:100%;
-  border-collapse:collapse;
-  table-layout:auto;  /* allows flexible column width */
+.card { 
+  border-radius: 12px; 
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+  margin: 20px 0; 
+  padding: 0; 
+  background: #fff; 
 }
-.modal-content th, .modal-content td {
-  padding:8px;
-  text-align:left;
+.card-header { 
+  padding: 24px; 
+  border-bottom: 1px solid #e5e7eb; 
+}
+.card-title { 
+  margin: 0 0 16px 0; 
+  font-size: 1.5rem; 
+  font-weight: 700;
+  color: #0f172a;
+}
+.card-body { 
+  padding: 0; 
+}
+.table-container {
+  overflow-x: auto;
+}
+.table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  min-width: 800px;
+}
+.table th, 
+.table td { 
+  padding: 16px 12px; 
+  text-align: left; 
+  border-bottom: 1px solid #f3f4f6; 
+}
+.table thead th { 
+  background: #f9fafb; 
+  font-weight: 600; 
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+}
+.table tbody tr { 
+  transition: all 0.2s; 
+}
+.table tbody tr:hover { 
+  background: #f9fafb; 
+}
+.chip { 
+  border-radius: 8px; 
+  padding: 8px 16px; 
+  font-size: 0.875rem; 
+  font-weight: 500; 
+  cursor: pointer; 
+  transition: all 0.2s; 
+  border: none; 
+  display: inline-block;
+}
+.chip.view { 
+  background: linear-gradient(135deg, #06b6d4, #3b82f6); 
+  color: #fff; 
+}
+.chip.view:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); 
 }
 
-.modal-content button { margin:10px; padding:8px 15px; border:none; border-radius:8px; cursor:pointer; font-weight:600; }
-.modal-invoice { background:#3b82f6; color:#fff; }
-.modal-cancel  { background:#ef4444; color:#fff; }
-.toggle-container { display:flex; justify-content:center; gap:20px; margin-top:10px; }
-.toggle-btn { padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600; border:1px solid #ccc; }
-.toggle-active { border:2px solid #3b82f6; }
-@media (max-width:992px){
-  .hide-lg { display:none; }
-  .wrap { width:95%; margin:auto; }
-  .table th, .table td { font-size:.85rem; padding:6px 8px; }
+/* Status badge styles */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+  white-space: nowrap;
 }
-.toolbar { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
-.toolbar input, .toolbar select, .toolbar button { padding:6px 10px; border-radius:6px; border:1px solid #ccc; }
+
+.status-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.status-badge:after {
+  content: '▼';
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* Payment Status Colors */
+.payment-awaiting-payment { 
+  background: #fef3c7; 
+  color: #92400e; 
+  border-color: #fbbf24; 
+}
+.payment-paid { 
+  background: #d1fae5; 
+  color: #065f46; 
+  border-color: #10b981; 
+}
+.payment-cancelled { 
+  background: #fee2e2; 
+  color: #991b1b; 
+  border-color: #ef4444; 
+}
+.payment-refunded { 
+  background: #ede9fe; 
+  color: #5b21b6; 
+  border-color: #8b5cf6; 
+}
+.payment-partially-refunded { 
+  background: #e0e7ff; 
+  color: #3730a3; 
+  border-color: #818cf8; 
+}
+
+/* Order Status Colors */
+.order-awaiting-processing { 
+  background: #fef3c7; 
+  color: #92400e; 
+  border-color: #fbbf24; 
+}
+.order-processing { 
+  background: #fed7aa; 
+  color: #9a3412; 
+  border-color: #fb923c; 
+}
+.order-ready-for-pickup { 
+  background: #dbeafe; 
+  color: #1e40af; 
+  border-color: #3b82f6; 
+}
+.order-shipped { 
+  background: #cffafe; 
+  color: #155e75; 
+  border-color: #06b6d4; 
+}
+.order-out-for-delivery { 
+  background: #a5f3fc; 
+  color: #0e7490; 
+  border-color: #22d3ee; 
+}
+.order-delivered { 
+  background: #d1fae5; 
+  color: #065f46; 
+  border-color: #10b981; 
+}
+.order-delivery-canceled { 
+  background: #fee2e2; 
+  color: #991b1b; 
+  border-color: #ef4444; 
+}
+.order-returned { 
+  background: #ede9fe; 
+  color: #5b21b6; 
+  border-color: #8b5cf6; 
+}
+
+/* Status Modal */
+.status-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.2s;
+}
+
+.status-modal.show {
+  display: flex;
+}
+
+.status-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  animation: slideUp 0.3s;
+}
+
+.status-modal-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.status-modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.status-modal-header .order-info {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.status-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.status-option {
+  padding: 14px 18px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-option:hover {
+  border-color: #3b82f6;
+  background: #f0f9ff;
+  transform: translateX(4px);
+}
+
+.status-option.selected {
+  border-color: #3b82f6;
+  background: #dbeafe;
+}
+
+.status-option-icon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #94a3b8;
+  flex-shrink: 0;
+}
+
+.status-option.selected .status-option-icon {
+  background: #3b82f6;
+}
+
+.status-modal-footer {
+  margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 11px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.modal-btn-cancel {
+  background: #f3f4f6;
+  color: #64748b;
+}
+
+.modal-btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.modal-btn-save {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff;
+}
+
+.modal-btn-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* View Order Modal */
+.modal-bg { 
+  display: none; 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); 
+  z-index: 9998; 
+  justify-content: center; 
+  align-items: center; 
+}
+
+.modal-content { 
+  background: #fff; 
+  padding: 32px; 
+  margin: 20px;
+  width: 95%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #0f172a;
+  font-size: 1.5rem;
+}
+
+.modal-content table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin-top: 20px;
+}
+
+.modal-content th, 
+.modal-content td {
+  padding: 12px 8px;
+  text-align: left;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.modal-content th {
+  font-weight: 600;
+  color: #6b7280;
+  width: 35%;
+}
+
+.modal-content td {
+  color: #0f172a;
+}
+
+.modal-content button { 
+  margin-top: 24px; 
+  padding: 12px 24px; 
+  border: none; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-weight: 600;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.modal-content button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* Toolbar */
+.toolbar { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 12px; 
+  margin-top: 16px; 
+}
+
+.toolbar input, 
+.toolbar select { 
+  padding: 10px 14px; 
+  border-radius: 8px; 
+  border: 1px solid #d1d5db; 
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.toolbar input:focus,
+.toolbar select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.toolbar input {
+  flex: 1;
+  min-width: 240px;
+}
+
+.toolbar select {
+  min-width: 200px;
+}
+
+.toolbar button {
+  padding: 10px 20px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.toolbar button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 992px) {
+  .hide-lg { display: none; }
+  .table th, .table td { 
+    font-size: 0.85rem; 
+    padding: 12px 8px; 
+  }
+  .wrap {
+    padding: 12px;
+  }
+  .card-header {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .toolbar {
+    flex-direction: column;
+  }
+  .toolbar input,
+  .toolbar select {
+    width: 100%;
+  }
+  .status-badge {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+}
 </style>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
 </head>
 <body>
-<div class="wrap narrow">
+<div class="wrap">
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title">Orders</h3>
+      <h3 class="card-title">Orders Management</h3>
       <div class="toolbar">
-        <input id="q" placeholder="Search order #, name, email or status">
+        <!-- <input id="q" type="text" placeholder="Search order #, customer name, email..."> -->
+        <h id="q"></h>
         <select id="status">
-          <option value="">All statuses</option>
-          <option value="pending">Pending</option>
+          <option value="">All Payment Statuses</option>
+          <option value="awaiting payment">Awaiting Payment</option>
           <option value="paid">Paid</option>
-          <option value="shipped">Shipped</option>
           <option value="cancelled">Cancelled</option>
           <option value="refunded">Refunded</option>
-          <option value="invoice">Invoice</option>
+          <option value="partially refunded">Partially Refunded</option>
         </select>
-        <button id="clear">Clear</button>
+        <button id="clear">Clear Filters</button>
       </div>
     </div>
-    <div class="card-body" style="overflow-x:auto;">
-      <table class="table" id="ordersTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Order</th>
-            <th>Customer</th>
-            <th class="hide-lg">Items</th>
-            <th class="hide-lg">Placed</th>
-            <th class="hide-lg">Total</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if(!$rows): ?>
-          <tr><td colspan="8" style="text-align:center;">No orders found.</td></tr>
-          <?php else: $i=1; foreach($rows as $r): ?>
-          <tr data-row data-status="<?=h(strtolower($r['status']))?>" data-hay="<?=h(strtolower(trim($r['order_number'].' '.$r['customer_name'].' '.$r['customer_email'].' '.$r['status'])))?>">
-            <td><?= (int)$i++ ?></td>
-            <td><?= h($r['order_number']) ?></td>
-            <td><?= h($r['customer_name']) ?> <br><small><?= h($r['customer_email']) ?></small></td>
-            <td class="hide-lg"><?= (int)$r['items_count'] ?></td>
-            <td class="hide-lg"><?= h($r['created_at']) ?></td>
-            <td class="hide-lg"><?= money($r['total_amount']) ?></td>
-            <td><?= status_pill($r['status']) ?></td>
-            <td>
-              <button class="chip view view_order" data-id="<?= (int)$r['id'] ?>">View</button>
-              <?php if(strtolower($r['status'])!='invoice'): ?>
-              <button class="chip invoice process_order" data-id="<?= (int)$r['id'] ?>">Process</button>
-              <?php else: ?>
-              <button class="chip del refund_order" data-id="<?= (int)$r['id'] ?>">Refund</button>
-              <?php endif; ?>
-            </td>
-          </tr>
-          <?php endforeach; endif; ?>
-        </tbody>
-      </table>
+    <div class="card-body">
+      <div class="table-container">
+        <table class="table" id="ordersTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Order Number</th>
+              <th>Customer</th>
+              <th class="hide-lg">Items</th>
+              <th class="hide-lg">Date</th>
+              <th class="hide-lg">Total</th>
+              <th>Payment Status</th>
+              <th>Order Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if(!$rows): ?>
+            <tr>
+              <td colspan="9" style="text-align:center; padding:60px 20px; color:#9ca3af;">
+                No orders found.
+              </td>
+            </tr>
+            <?php else: $i=1; foreach($rows as $r): ?>
+            <tr data-row 
+                data-status="<?=h(strtolower($r['status']))?>" 
+                data-payment-status="<?=h(strtolower($r['payment_status']))?>" 
+                data-hay="<?=h(strtolower(trim($r['order_number'].' '.$r['customer_name'].' '.$r['customer_email'].' '.$r['status'].' '.$r['payment_status'])))?>">
+              <td><?= (int)$i++ ?></td>
+              <td><strong><?= h($r['order_number']) ?></strong></td>
+              <td>
+                <div><?= h($r['customer_name']) ?></div>
+                <small style="color:#6b7280;"><?= h($r['customer_email']) ?></small>
+              </td>
+              <td class="hide-lg"><?= (int)$r['items_count'] ?></td>
+              <td class="hide-lg">
+                <small><?= h(date('M d, Y', strtotime($r['created_at']))) ?></small>
+              </td>
+              <td class="hide-lg"><strong><?= money($r['total_amount']) ?></strong></td>
+              <td>
+                <span class="status-badge payment-<?= str_replace(' ', '-', strtolower($r['payment_status'])) ?>" 
+                      data-type="payment" 
+                      data-order-id="<?= (int)$r['id'] ?>"
+                      data-order-number="<?= h($r['order_number']) ?>"
+                      data-current-status="<?= h($r['payment_status']) ?>">
+                  <?= h(ucwords($r['payment_status'])) ?>
+                </span>
+              </td>
+              <td>
+                <span class="status-badge order-<?= str_replace(' ', '-', strtolower($r['status'])) ?>" 
+                      data-type="order" 
+                      data-order-id="<?= (int)$r['id'] ?>"
+                      data-order-number="<?= h($r['order_number']) ?>"
+                      data-current-status="<?= h($r['status']) ?>">
+                  <?= h(ucwords($r['status'])) ?>
+                </span>
+              </td>
+              <td>
+                <button class="chip view view_order" data-id="<?= (int)$r['id'] ?>">View</button>
+              </td>
+            </tr>
+            <?php endforeach; endif; ?>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Modal Confirm -->
-<div id="modalConfirm" class="modal-bg">
-  <div class="modal-content">
-    <p>Has payment been received for this order?</p>
-    <div class="toggle-container">
-      <div class="toggle-btn toggle-no toggle-active" id="toggleNo">No</div>
-      <div class="toggle-btn toggle-yes" id="toggleYes">Yes</div>
-    </div>
-    <button class="modal-invoice" id="btnInvoice">INVOICE</button>
-    <button class="modal-cancel" id="btnCancel">CANCEL</button>
-  </div>
-</div>
-
-<!-- Modal View -->
-<div id="modalView" class="modal-bg" style="width:500px !important;">
+<!-- Modal: View Order Details -->
+<div id="modalView" class="modal-bg">
   <div class="modal-content">
     <div class="modal-body"></div>
     <button onclick="document.getElementById('modalView').style.display='none'">Close</button>
   </div>
 </div>
 
+<!-- Modal: Change Status -->
+<div id="statusModal" class="status-modal">
+  <div class="status-modal-content">
+    <div class="status-modal-header">
+      <h3 id="modalTitle">Change Status</h3>
+      <div class="order-info" id="modalOrderInfo">Order #</div>
+    </div>
+    <div class="status-options" id="statusOptions">
+      <!-- Options populated dynamically -->
+    </div>
+    <div class="status-modal-footer">
+      <button class="modal-btn modal-btn-cancel" onclick="closeStatusModal()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="saveStatusChange()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <script>
-let selectedId=null, paymentReceived=false;
-const toggleYes=document.getElementById('toggleYes'), toggleNo=document.getElementById('toggleNo');
+let currentStatusChange = {
+  orderId: null,
+  type: null,
+  currentStatus: null,
+  newStatus: null,
+  orderNumber: null,
+  badge: null
+};
 
-toggleYes.addEventListener('click',()=>{paymentReceived=true; toggleYes.classList.add('toggle-active'); toggleNo.classList.remove('toggle-active');});
-toggleNo.addEventListener('click',()=>{paymentReceived=false; toggleNo.classList.add('toggle-active'); toggleYes.classList.remove('toggle-active');});
+const paymentStatuses = [
+  { value: 'awaiting payment', label: 'Awaiting Payment' },
+  { value: 'paid', label: 'Paid' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'refunded', label: 'Refunded' },
+  { value: 'partially refunded', label: 'Partially Refunded' }
+];
 
-document.addEventListener('click',function(e){
-  const viewBtn=e.target.closest('.view_order'), procBtn=e.target.closest('.process_order'), refundBtn=e.target.closest('.refund_order');
+const orderStatuses = [
+  { value: 'awaiting processing', label: 'Awaiting Processing' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'ready for pickup', label: 'Ready For Pickup' },
+  { value: 'shipped', label: 'Shipped' },
+  { value: 'out for delivery', label: 'Out For Delivery' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'delivery canceled', label: 'Delivery Canceled' },
+  { value: 'returned', label: 'Returned' }
+];
 
-  if(viewBtn){
-    const id=viewBtn.dataset.id;
-    fetch('ajax.php?action=view_order',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({id})})
-    .then(r=>r.text()).then(html=>{ const modal=document.getElementById('modalView'); modal.querySelector('.modal-body').innerHTML=html; modal.style.display='flex'; });
-  }
-
-  if(procBtn){
-    selectedId=procBtn.dataset.id; paymentReceived=false; toggleNo.classList.add('toggle-active'); toggleYes.classList.remove('toggle-active'); document.getElementById('modalConfirm').style.display='flex';
-  }
-
-  if(refundBtn){
-    const id=refundBtn.dataset.id;
-    if(confirm('Refund this INVOICE order?')){
-      fetch('ajax.php?action=refund_order',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({id})})
-      .then(r=>r.text()).then(resp=>{ if(resp==='1'){ toast('Order refunded'); const row=refundBtn.closest('tr'); row.querySelector('td:nth-child(7)').innerHTML='<span class="pill bg-refunded">REFUNDED</span>'; refundBtn.remove(); } else toast('Refund failed: '+resp); });
-    }
+// Open status modal when badge clicked
+document.addEventListener('click', function(e) {
+  const badge = e.target.closest('.status-badge');
+  if (badge) {
+    const type = badge.dataset.type;
+    const orderId = badge.dataset.orderId;
+    const orderNumber = badge.dataset.orderNumber;
+    const currentStatus = badge.dataset.currentStatus;
+    
+    currentStatusChange = {
+      orderId: orderId,
+      type: type,
+      currentStatus: currentStatus.toLowerCase(),
+      newStatus: currentStatus.toLowerCase(),
+      orderNumber: orderNumber,
+      badge: badge
+    };
+    
+    openStatusModal(type, currentStatus, orderNumber);
   }
 });
 
-document.getElementById('btnInvoice').addEventListener('click',()=>updateStatus('INVOICE'));
-document.getElementById('btnCancel').addEventListener('click',()=>updateStatus('CANCEL'));
-
-// function updateStatus(status){
-//   document.getElementById('modalConfirm').style.display='none';
-//   if(!selectedId) return;
-//   const payment_status = paymentReceived?1:0;
-//   if(status==='INVOICE' && !paymentReceived){ toast('Cannot create INVOICE: payment not received'); return; }
-
-//   fetch('ajax.php?action=process_order',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({id:selectedId,status:status,payment_status:payment_status})})
-//   .then(r=>r.text()).then(resp=>{
-//     if(resp==='1'||resp.toUpperCase()==='OK'){
-//       toast('Order updated to '+status);
-//       const row=document.querySelector('[data-row] [data-id="'+selectedId+'"]').closest('tr');
-//       if(row){ row.querySelector('td:nth-child(7)').innerHTML=`<span class="pill ${status.toLowerCase()}">${status}</span>`; const btn=row.querySelector('.process_order'); if(btn){btn.textContent=status; btn.disabled=true; btn.style.opacity=0.6;} }
-//       fetch('ajax.php?action=send_email',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({id:selectedId,status:status})});
-//     } else toast('Update failed: '+resp);
-//   }).catch(()=>toast('Network error'));
-// }
-function updateStatus(status){
-  document.getElementById('modalConfirm').style.display='none';
-  if(!selectedId) return;
-
-  // paymentReceived is true/false depending on the toggle
-  const payment_status = paymentReceived ? 1 : 0;
-
-  fetch('ajax.php?action=process_order',{
-    method:'POST',
-    headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:new URLSearchParams({
-      id:selectedId,
-      status:status,
-      payment_status:payment_status
-    })
-  })
-  .then(r=>r.text())
-  .then(resp=>{
-    if(resp==='1' || resp.toUpperCase()==='OK'){
-      toast('Order updated to '+status);
-
-      // Update table row visually
-      const row=document.querySelector('[data-row] [data-id="'+selectedId+'"]').closest('tr');
-      if(row){
-        row.querySelector('td:nth-child(7)').innerHTML =
-          `<span class="pill ${status.toLowerCase()}">${status}</span>`;
-        const btn=row.querySelector('.process_order');
-        if(btn){
-          btn.textContent=status;
-          btn.disabled=true;
-          btn.style.opacity=0.6;
-        }
-      }
-
-      // Optional: notify backend to send email
-      fetch('ajax.php?action=send_email',{
-        method:'POST',
-        headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:new URLSearchParams({id:selectedId,status:status,payment_status:payment_status})
-      });
-    } else {
-      toast('Update failed: '+resp);
-    }
-  })
-  .catch(()=>toast('Network error'));
+function openStatusModal(type, currentStatus, orderNumber) {
+  const modal = document.getElementById('statusModal');
+  const title = document.getElementById('modalTitle');
+  const orderInfo = document.getElementById('modalOrderInfo');
+  const optionsContainer = document.getElementById('statusOptions');
+  
+  title.textContent = type === 'payment' ? 'Change Payment Status' : 'Change Order Status';
+  orderInfo.textContent = `Order ${orderNumber}`;
+  
+  const statuses = type === 'payment' ? paymentStatuses : orderStatuses;
+  
+  optionsContainer.innerHTML = statuses.map(status => `
+    <div class="status-option ${status.value.toLowerCase() === currentStatus.toLowerCase() ? 'selected' : ''}" 
+         data-value="${status.value}">
+      <span class="status-option-icon"></span>
+      ${status.label}
+    </div>
+  `).join('');
+  
+  modal.classList.add('show');
+  
+  // Add click handlers to options
+  document.querySelectorAll('.status-option').forEach(option => {
+    option.addEventListener('click', function() {
+      document.querySelectorAll('.status-option').forEach(o => o.classList.remove('selected'));
+      this.classList.add('selected');
+      currentStatusChange.newStatus = this.dataset.value;
+    });
+  });
 }
 
-// Search/filter
-const $q=document.getElementById('q'), $st=document.getElementById('status'), $clear=document.getElementById('clear');
-function applyFilter(){ const t=($q.value||'').toLowerCase().trim(); const s=($st.value||'').toLowerCase().trim(); document.querySelectorAll('[data-row]').forEach(row=>{ const hay=row.dataset.hay||''; const st=row.dataset.status||''; const okT=!t||hay.indexOf(t)!==-1||st.indexOf(t)!==-1; const okS=!s||st===s; row.style.display=(okT&&okS)?'':'none'; });}
-$q.addEventListener('input',applyFilter); $st.addEventListener('change',applyFilter); $clear.addEventListener('click',()=>{$q.value='';$st.value='';applyFilter();});
+function closeStatusModal() {
+  document.getElementById('statusModal').classList.remove('show');
+}
 
+function saveStatusChange() {
+  if (!currentStatusChange.orderId || !currentStatusChange.newStatus) {
+    toast('No changes to save');
+    closeStatusModal();
+    return;
+  }
+  
+  const action = currentStatusChange.type === 'payment' ? 'update_payment_status' : 'update_order_status';
+  const paramName = currentStatusChange.type === 'payment' ? 'payment_status' : 'status';
+  
+  // Show loading state
+  const saveBtn = document.querySelector('.modal-btn-save');
+  const originalText = saveBtn.textContent;
+  saveBtn.textContent = 'Saving...';
+  saveBtn.disabled = true;
+  
+  fetch('ajaxx.php?action=' + action, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: new URLSearchParams({
+      id: currentStatusChange.orderId,
+      [paramName]: currentStatusChange.newStatus
+    })
+  })
+  .then(r => r.text())
+  .then(resp => {
+    saveBtn.textContent = originalText;
+    saveBtn.disabled = false;
+    
+    if (resp === '1' || resp.toUpperCase() === 'OK') {
+      toast('Status updated successfully! Email sent to customer.');
+      
+      // Update badge
+      const badge = currentStatusChange.badge;
+      const newStatusFormatted = currentStatusChange.newStatus.split(' ').map(w => 
+        w.charAt(0).toUpperCase() + w.slice(1)
+      ).join(' ');
+      
+      badge.textContent = newStatusFormatted;
+      badge.dataset.currentStatus = currentStatusChange.newStatus;
+      
+      // Update badge class
+      const prefix = currentStatusChange.type === 'payment' ? 'payment-' : 'order-';
+      badge.className = 'status-badge ' + prefix + currentStatusChange.newStatus.replace(/ /g, '-');
+      
+      // Update row data
+      const row = badge.closest('tr');
+      if (currentStatusChange.type === 'payment') {
+        row.dataset.paymentStatus = currentStatusChange.newStatus.toLowerCase();
+      } else {
+        row.dataset.status = currentStatusChange.newStatus.toLowerCase();
+      }
+      
+      closeStatusModal();
+    } else {
+      toast('Update failed: ' + resp);
+    }
+  })
+  .catch(err => {
+    saveBtn.textContent = originalText;
+    saveBtn.disabled = false;
+    toast('Network error. Please try again.');
+    console.error(err);
+  });
+}
+
+// Close modal on background click
+document.getElementById('statusModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeStatusModal();
+  }
+});
+
+// View order details
+document.addEventListener('click', function(e) {
+  const viewBtn = e.target.closest('.view_order');
+  if (viewBtn) {
+    const id = viewBtn.dataset.id;
+    fetch('ajax.php?action=view_order', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({id})
+    })
+    .then(r => r.text())
+    .then(html => {
+      const modal = document.getElementById('modalView');
+      modal.querySelector('.modal-body').innerHTML = html;
+      modal.style.display = 'flex';
+    })
+    .catch(err => {
+      toast('Failed to load order details');
+      console.error(err);
+    });
+  }
+});
+
+// Search and filter
+const $q = document.getElementById('q');
+const $st = document.getElementById('status');
+const $clear = document.getElementById('clear');
+
+function applyFilter() {
+  const t = ($q.value || '').toLowerCase().trim();
+  const s = ($st.value || '').toLowerCase().trim();
+  
+  let visibleCount = 0;
+  document.querySelectorAll('[data-row]').forEach(row => {
+    const hay = row.dataset.hay || '';
+    const status = row.dataset.status || '';
+    const paymentStatus = row.dataset.paymentStatus || '';
+    
+    const okT = !t || hay.indexOf(t) !== -1;
+    const okS = !s || paymentStatus === s;
+    
+    if (okT && okS) {
+      row.style.display = '';
+      visibleCount++;
+    } else {
+      row.style.display = 'none';
+    }
+  });
+}
+
+$q.addEventListener('input', applyFilter);
+$st.addEventListener('change', applyFilter);
+$clear.addEventListener('click', () => {
+  $q.value = '';
+  $st.value = '';
+  applyFilter();
+});
+
+// Toast notification
 let toastTimer;
-function toast(msg){ let t=document.getElementById('miniToast'); if(!t){ t=document.createElement('div'); t.id='miniToast'; t.style.cssText='position:fixed;left:16px;bottom:16px;background:#0f172a;color:#fff;padding:10px 12px;border-radius:10px;z-index:9999'; document.body.appendChild(t);} t.textContent=msg; t.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.style.display='none',1800);}
+function toast(msg) {
+  let t = document.getElementById('miniToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'miniToast';
+    t.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0f172a;color:#fff;padding:14px 28px;border-radius:10px;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.3);font-weight:500;min-width:250px;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.display = 'none';
+  }, 3000);
+}
+
+  $(document).ready(function() {
+    $('#ordersTable').DataTable({
+      pageLength: 10,     // number of rows per page
+      lengthMenu: [5, 10, 25, 50, 100], // dropdown options
+      ordering: true,     // enable sorting
+      searching: true     // enable search box
+    });
+  });
+
 </script>
 </body>
 </html>

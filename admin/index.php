@@ -12,11 +12,24 @@ try {
     die("Connection failed: " . $e->getMessage());
 }
 
-// Get date range from URL parameters
-$date_from = $_GET['date_from'] ?? date('Y-m-01'); // Default to start of current month
-$date_to = $_GET['date_to'] ?? date('Y-m-d'); // Default to today
+// Get current page from URL
+$current_page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
+$allowed_pages = ['dashboard', 'inventory', 'orders', 'customers', 'enquiries', 'reviews', 'coupons', 'reports'];
 
-// Auto-detect available tables
+// Validate page parameter
+if (!in_array($current_page, $allowed_pages)) {
+    $current_page = 'dashboard';
+}
+
+// Dynamic date handling
+$date_from = isset($_GET['date_from']) && !empty($_GET['date_from']) 
+    ? $_GET['date_from'] 
+    : date('Y-m-01');
+
+$date_to = isset($_GET['date_to']) && !empty($_GET['date_to']) 
+    ? $_GET['date_to'] 
+    : date('Y-m-d');
+
 function getAvailableTables($pdo) {
     $stmt = $pdo->query("SHOW TABLES");
     return $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -24,1412 +37,740 @@ function getAvailableTables($pdo) {
 
 $available_tables = getAvailableTables($pdo);
 
-// Function to get dynamic stats based on available tables
 function getDynamicStats($pdo, $available_tables, $date_from, $date_to) {
     $stats = [];
     
-    // Products/Inventory stats
-    $product_tables = ['products', 'product', 'items', 'inventory'];
-    $product_table = null;
-    foreach ($product_tables as $table) {
+    foreach (['products', 'product', 'items', 'inventory'] as $table) {
         if (in_array($table, $available_tables)) {
-            $product_table = $table;
+            $stats['total_products'] = $pdo->query("SELECT COUNT(*) FROM $table")->fetchColumn();
+            try {
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE DATE(created_at) BETWEEN ? AND ?");
+                $stmt->execute([$date_from, $date_to]);
+                $stats['products_added'] = $stmt->fetchColumn();
+            } catch (Exception $e) {
+                $stats['products_added'] = 0;
+            }
             break;
         }
     }
     
-    if ($product_table) {
-        // Total products
-        $stmt = $pdo->query("SELECT COUNT(*) FROM $product_table");
-        $stats['total_products'] = $stmt->fetchColumn();
-        
-        // Low stock items (assuming quantity < 10 is low stock)
-        try {
-            $stmt = $pdo->query("SELECT COUNT(*) FROM $product_table WHERE quantity < 10");
-            $stats['low_stock'] = $stmt->fetchColumn();
-        } catch (Exception $e) {
-            $stats['low_stock'] = 0;
-        }
-        
-        // Products added in date range (if created_at exists)
-        try {
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM $product_table WHERE DATE(created_at) BETWEEN ? AND ?");
-            $stmt->execute([$date_from, $date_to]);
-            $stats['products_added'] = $stmt->fetchColumn();
-        } catch (Exception $e) {
-            $stats['products_added'] = 0;
-        }
-    }
-    
-    // Orders stats
-    $order_tables = ['orders', 'order', 'sales'];
-    $order_table = null;
-    foreach ($order_tables as $table) {
+    foreach (['orders', 'order', 'sales'] as $table) {
         if (in_array($table, $available_tables)) {
-            $order_table = $table;
+            try {
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE DATE(created_at) BETWEEN ? AND ?");
+                $stmt->execute([$date_from, $date_to]);
+                $stats['total_orders'] = $stmt->fetchColumn();
+                
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE status='PENDING' AND DATE(created_at) BETWEEN ? AND ?");
+                $stmt->execute([$date_from, $date_to]);
+                $stats['pending_orders'] = $stmt->fetchColumn();
+                
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE status IN ('COMPLETED','DELIVERED','INVOICE') AND DATE(created_at) BETWEEN ? AND ?");
+                $stmt->execute([$date_from, $date_to]);
+                $stats['completed_orders'] = $stmt->fetchColumn();
+                
+                $stmt = $pdo->prepare("SELECT COALESCE(SUM(total_amount), 0) FROM $table WHERE DATE(created_at) BETWEEN ? AND ?");
+                $stmt->execute([$date_from, $date_to]);
+                $stats['total_revenue'] = $stmt->fetchColumn();
+            } catch (Exception $e) {
+                $stats['total_orders'] = 0;
+                $stats['pending_orders'] = 0;
+                $stats['completed_orders'] = 0;
+                $stats['total_revenue'] = 0;
+            }
             break;
         }
     }
     
-    if ($order_table) {
-        // Get table structure to understand columns
-        $stmt = $pdo->prepare("DESCRIBE $order_table");
-        $stmt->execute();
-        $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
-        $date_column = 'created_at';
-        if (in_array('order_date', $columns)) $date_column = 'order_date';
-        if (in_array('date', $columns)) $date_column = 'date';
-        
-        $amount_column = 'total_amount';
-        if (in_array('amount', $columns)) $amount_column = 'amount';
-        if (in_array('total', $columns)) $amount_column = 'total';
-        
-        $status_column = 'status';
-        
-        // Orders in date range
-        try {
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM $order_table WHERE DATE($date_column) BETWEEN ? AND ?");
-            $stmt->execute([$date_from, $date_to]);
-            $stats['total_orders'] = $stmt->fetchColumn();
-        } catch (Exception $e) {
-            $stats['total_orders'] = 0;
-        }
-        
-        // Revenue in date range
-        try {
-            $stmt = $pdo->prepare("SELECT COALESCE(SUM($amount_column), 0) FROM $order_table WHERE DATE($date_column) BETWEEN ? AND ?");
-            $stmt->execute([$date_from, $date_to]);
-            $stats['total_revenue'] = $stmt->fetchColumn();
-        } catch (Exception $e) {
-            $stats['total_revenue'] = 0;
-        }
-        
-        // Pending orders
-        try {
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM $order_table WHERE $status_column = 'PENDING'");
-            $stmt->execute();
-            $stats['pending_orders'] = $stmt->fetchColumn();
-        } catch (Exception $e) {
-            $stats['pending_orders'] = 0;
-        }
-        
-        // Completed orders in date range
-        try {
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM $order_table WHERE $status_column IN ('COMPLETED', 'DELIVERED', 'INVOICE') AND DATE($date_column) BETWEEN ? AND ?");
-            $stmt->execute([$date_from, $date_to]);
-            $stats['completed_orders'] = $stmt->fetchColumn();
-        } catch (Exception $e) {
-            $stats['completed_orders'] = 0;
-        }
-        
-        // Today's revenue
-        try {
-            $stmt = $pdo->prepare("SELECT COALESCE(SUM($amount_column), 0) FROM $order_table WHERE DATE($date_column) = CURDATE()");
-            $stmt->execute();
-            $stats['today_revenue'] = $stmt->fetchColumn();
-        } catch (Exception $e) {
-            $stats['today_revenue'] = 0;
-        }
-    }
-    
-    // Customer stats
-    $customer_tables = ['customers', 'customer', 'users', 'clients'];
-    $customer_table = null;
-    foreach ($customer_tables as $table) {
-        if (in_array($table, $available_tables)) {
-            $customer_table = $table;
-            break;
-        }
-    }
-    
-    if ($customer_table) {
-        // Total customers
-        $stmt = $pdo->query("SELECT COUNT(*) FROM $customer_table");
+    // foreach (['customers', 'customer', 'users', 'clients'] as $table) {
+    //     if (in_array($table, $available_tables)) {
+    //         $stats['total_customers'] = $pdo->query("SELECT COUNT(*) FROM $table")->fetchColumn();
+    //         try {
+    //             $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE DATE(created_at) BETWEEN ? AND ?");
+    //             $stmt->execute([$date_from, $date_to]);
+    //             $stats['new_customers'] = $stmt->fetchColumn();
+    //         } catch (Exception $e) {
+    //             $stats['new_customers'] = 0;
+    //         }
+    //         break;
+    //     }
+    // }
+    if (in_array('orders', $available_tables)) {
+    try {
+        // Total unique customers who have placed at least one order
+        $stmt = $pdo->query("SELECT COUNT(DISTINCT customer_email) FROM orders");
         $stats['total_customers'] = $stmt->fetchColumn();
-        
-        // New customers in date range
-        try {
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM $customer_table WHERE DATE(created_at) BETWEEN ? AND ?");
-            $stmt->execute([$date_from, $date_to]);
-            $stats['new_customers'] = $stmt->fetchColumn();
-        } catch (Exception $e) {
-            $stats['new_customers'] = 0;
-        }
+
+        // Unique customers within selected date range
+        $stmt = $pdo->prepare("
+            SELECT COUNT(DISTINCT customer_email)
+            FROM orders
+            WHERE DATE(created_at) BETWEEN ? AND ?
+        ");
+        $stmt->execute([$date_from, $date_to]);
+        $stats['new_customers'] = $stmt->fetchColumn();
+    } catch (Exception $e) {
+        $stats['total_customers'] = 0;
+        $stats['new_customers'] = 0;
     }
-    
+}
     return $stats;
 }
 
 $stats = getDynamicStats($pdo, $available_tables, $date_from, $date_to);
-?>
+$filter_applied = isset($_GET['date_from']) || isset($_GET['date_to']);
 
+// Page titles mapping
+$page_titles = [
+    'dashboard' => 'Shades Beauty Dashboard',
+    'inventory' => 'Inventory Management',
+    'orders' => 'Orders Management',
+    'customers' => 'Customer Management',
+    'enquiries' => 'Customer Enquiries',
+    'reviews' => 'Customer Reviews',
+    'coupons' => 'Coupons Management',
+    'reports' => 'Sales Reports'
+];
+
+$page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
+?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>Shades Beauty Admin Dashboard</title>
-
-    <!-- Bootstrap CSS -->
+    <title><?php echo $page_title; ?></title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
-            --secondary-color: #6366f1;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --info-color: #3b82f6;
-            --light-bg: #f8fafc;
-            --sidebar-bg: #ffffff;
-            --card-bg: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border-color: #e2e8f0;
-            --hover-bg: #f1f5f9;
-            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: #ffffff;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: var(--text-primary);
-            line-height: 1.6;
-        }
-
-        .wrapper {
-            display: flex;
+        
+        body { 
+            background: #f8fafc !important;
+            font-family: 'Plus Jakarta Sans', sans-serif !important; 
+            color: #1e293b !important;
             min-height: 100vh;
         }
 
-        /* Date Range Filter Section */
-        .date-filter-section {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            padding: 1.5rem 2rem;
-            margin-bottom: 2rem;
-            border-radius: 0.75rem;
-            box-shadow: var(--shadow);
+        .sidebar { 
+            width: 260px !important; 
+            background: #ffffff !important;
+            border-right: 1px solid #e2e8f0 !important; 
+            position: fixed !important; 
+            height: 100vh !important; 
+            z-index: 1000 !important; 
+            overflow-y: auto !important;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02) !important;
         }
 
-        .date-filter-form {
-            display: flex;
-            align-items: end;
-            gap: 1rem;
-            flex-wrap: wrap;
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
         }
 
-        .date-input-group {
-            display: flex;
-            flex-direction: column;
-            min-width: 150px;
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
         }
 
-        .date-input-group label {
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+        }
+
+        .sidebar-header { 
+            padding: 2rem 1.5rem !important; 
+            border-bottom: 1px solid #e2e8f0 !important;
+            background: #ffffff;
+        }
+
+        .sidebar .logo { 
+            display: flex !important; 
+            align-items: center !important; 
+            text-decoration: none !important; 
+            color: #0f172a !important; 
+            transition: opacity 0.2s ease !important;
+        }
+
+        .sidebar .logo:hover {
+            opacity: 0.8;
+        }
+
+        .sidebar .logo i { 
+            font-size: 1.75rem !important; 
+            color: #6366f1 !important;
+            margin-right: 0.75rem !important; 
+        }
+
+        .sidebar .logo span { 
+            font-weight: 700 !important; 
+            font-size: 1.125rem !important;
+            color: #0f172a !important;
+            letter-spacing: -0.3px;
+        }
+
+        .sidebar-nav { 
+            padding: 1.5rem 0 !important; 
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-link { 
+            display: flex !important; 
+            align-items: center !important; 
+            padding: 0.75rem 1.25rem !important; 
+            color: #64748b !important; 
+            text-decoration: none !important; 
+            transition: all 0.2s ease !important;
+            margin: 0.15rem 0.75rem !important;
+            border-radius: 0.5rem !important;
+            font-weight: 500 !important;
             font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 0.25rem;
-            opacity: 0.9;
-        }
-
-        .date-input-group input {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 0.375rem;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 0.875rem;
-        }
-
-        .date-input-group input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
-        }
-
-        .filter-btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 0.5rem 1.5rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .filter-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .current-range {
-            font-size: 0.875rem;
-            opacity: 0.9;
-            margin-top: 0.5rem;
-        }
-
-        /* Sidebar Styling */
-        .sidebar {
-            width: 260px;
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--border-color);
-            position: fixed;
-            height: 100vh;
-            left: 0;
-            top: 0;
-            z-index: 1000;
-            overflow-y: auto;
-            transition: all 0.3s ease;
-            box-shadow: var(--shadow);
-        }
-
-        .sidebar.collapsed {
-            width: 80px;
-        }
-
-        .sidebar-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .sidebar-header .logo {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-            color: var(--text-primary);
-        }
-
-        .sidebar-header .logo i {
-            font-size: 1.5rem;
-            color: var(--primary-color);
-            margin-right: 0.75rem;
-        }
-
-        .sidebar-header .logo span {
-            font-weight: 700;
-            font-size: 1.1rem;
-            white-space: nowrap;
-        }
-
-        .sidebar-toggle {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 0.375rem;
-            transition: all 0.2s ease;
-        }
-
-        .sidebar-toggle:hover {
-            background-color: var(--hover-bg);
-            color: var(--text-primary);
-        }
-
-        .sidebar-nav {
-            padding: 1rem 0;
-        }
-
-        .nav-item {
-            margin: 0.25rem 0;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1.5rem;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: all 0.2s ease;
-            border-radius: 0;
-            font-weight: 500;
             position: relative;
         }
 
-        .nav-link:hover {
-            background-color: var(--hover-bg);
-            color: var(--primary-color);
+        .nav-link:hover { 
+            background: #f1f5f9 !important;
+            color: #6366f1 !important; 
         }
 
-        .nav-link.active {
-            background-color: rgba(79, 70, 229, 0.1);
-            color: var(--primary-color);
-            border-right: 3px solid var(--primary-color);
+        .nav-link.active { 
+            background: #6366f1 !important;
+            color: #fff !important; 
         }
 
-        .nav-link i {
-            width: 20px;
-            margin-right: 0.75rem;
-            font-size: 1rem;
-            text-align: center;
+        .nav-link i { 
+            width: 20px !important; 
+            margin-right: 0.75rem !important;
+            font-size: 0.95rem !important;
         }
 
-        .nav-link span {
-            white-space: nowrap;
+        .main-content { 
+            margin-left: 260px !important; 
+            flex: 1 !important;
+            background: transparent !important;
         }
 
-        .sidebar.collapsed .nav-link span,
-        .sidebar.collapsed .sidebar-header .logo span {
-            display: none;
+        .topbar { 
+            background: #ffffff !important;
+            border-bottom: 1px solid #e2e8f0 !important; 
+            padding: 1.5rem 2rem !important; 
+            display: flex !important; 
+            justify-content: space-between !important; 
+            align-items: center !important; 
+            position: sticky !important; 
+            top: 0 !important; 
+            z-index: 999 !important;
         }
 
-        .sidebar.collapsed .nav-link {
-            justify-content: center;
-            padding: 0.75rem;
+        .topbar h4 { 
+            margin: 0 !important; 
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            font-size: 1.25rem;
+            letter-spacing: -0.3px;
         }
 
-        .sidebar.collapsed .nav-link i {
-            margin-right: 0;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 260px;
-            flex: 1;
-            transition: all 0.3s ease;
-            background-color: #ffffff;
-        }
-
-        .main-content.expanded {
-            margin-left: 80px;
-        }
-
-        .topbar {
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            box-shadow: var(--shadow);
-        }
-
-        .topbar-left h4 {
-            margin: 0;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .topbar-left small {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-        }
-
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .topbar-right select {
-            border: 1px solid var(--border-color);
-            border-radius: 0.375rem;
-            padding: 0.5rem 0.75rem;
-            background: var(--card-bg);
-            color: var(--text-primary);
-            font-size: 0.875rem;
-        }
-
-        .user-dropdown .dropdown-toggle {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-weight: 500;
-        }
-
-        .user-dropdown .dropdown-toggle:hover {
-            background-color: var(--hover-bg);
-        }
-
-        /* Content Area */
-        .content {
-            padding: 2rem;
-        }
-
-        .page-content {
-            display: none;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s ease;
-        }
-
-        .page-content.active {
+        .topbar small { 
+            color: #64748b !important; 
+            font-size: 0.8rem !important; 
+            font-weight: 400;
             display: block;
-            opacity: 1;
-            transform: translateY(0);
+            margin-top: 0.25rem;
         }
 
-        /* Stats Cards */
-        .stats-row {
-            margin-bottom: 2rem;
+        .topbar .btn {
+            background: #6366f1 !important;
+            border: none !important;
+            color: white !important;
+            padding: 0.625rem 1.25rem !important;
+            border-radius: 0.5rem !important;
+            font-weight: 600 !important;
+            font-size: 0.875rem;
+            transition: all 0.2s ease !important;
         }
 
-        .stats-card {
-            background: var(--card-bg);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            transition: all 0.2s ease;
+        .topbar .btn:hover {
+            background: #4f46e5 !important;
+            transform: translateY(-1px);
+        }
+
+        .content { 
+            padding: 2.5rem !important;
+            background: transparent !important;
+            animation: fadeInUp 0.5s ease !important;
+        }
+
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .date-filter-section { 
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important; 
+            padding: 2rem !important; 
+            margin-bottom: 2rem !important; 
+            border-radius: 0.75rem !important;
+        }
+
+        .date-filter-form { 
+            display: flex !important; 
+            align-items: end !important; 
+            gap: 1.25rem !important; 
+            flex-wrap: wrap !important; 
+        }
+
+        .date-input-group { 
+            display: flex !important; 
+            flex-direction: column !important; 
+            min-width: 200px !important; 
+        }
+
+        .date-input-group label { 
+            font-size: 0.8rem !important; 
+            font-weight: 600 !important; 
+            margin-bottom: 0.5rem !important;
+            color: #334155 !important;
+        }
+
+        .date-input-group input { 
+            padding: 0.75rem 1rem !important; 
+            border: 1px solid #e2e8f0 !important; 
+            border-radius: 0.5rem !important; 
+            background: #ffffff !important; 
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+            color: #1e293b;
+        }
+
+        .date-input-group input:focus { 
+            outline: none !important; 
+            border-color: #6366f1 !important; 
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+        }
+
+        .filter-btn { 
+            background: #6366f1 !important;
+            color: white !important; 
+            border: none !important; 
+            padding: 0.75rem 2rem !important; 
+            border-radius: 0.5rem !important; 
+            cursor: pointer !important; 
+            font-weight: 600 !important;
+            transition: all 0.2s ease !important;
+            font-size: 0.875rem;
+        }
+
+        .filter-btn:hover { 
+            background: #4f46e5 !important;
+            transform: translateY(-1px);
+        }
+
+        .reset-btn {
+            background: #ef4444 !important;
+            color: white !important;
+            border: none !important;
+            padding: 0.75rem 1.5rem !important;
+            border-radius: 0.5rem !important;
+            cursor: pointer !important;
+            font-weight: 600 !important;
+            transition: all 0.2s ease !important;
+            font-size: 0.875rem;
+            text-decoration: none !important;
+            display: inline-block;
+        }
+
+        .reset-btn:hover {
+            background: #dc2626 !important;
+            transform: translateY(-1px);
+            color: white !important;
+        }
+
+        .current-range { 
+            font-size: 0.875rem !important; 
+            color: #64748b !important; 
+            margin-top: 1.5rem !important; 
+            padding-top: 1.5rem !important; 
+            border-top: 1px solid #e2e8f0 !important;
+            font-weight: 500 !important;
+        }
+
+        .current-range strong {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .filter-badge {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .row { 
+            display: flex !important; 
+            flex-wrap: wrap !important; 
+            margin: 0 -0.6rem !important; 
+            max-width: 100% !important;
+        }
+
+        .col-lg-4,
+        .col-md-6 { 
+            padding: 0 0.6rem !important; 
+            margin-bottom: 1.2rem !important; 
+        }
+
+        .col-lg-4 { 
+            flex: 0 0 33.333333% !important; 
+            max-width: 33.333333% !important; 
+        }
+
+        .stat-card {
+            background: #ffffff !important;
+            border-radius: 0.75rem !important;
+            padding: 1.5rem !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+            border: 1px solid #e2e8f0 !important;
+            transition: all 0.2s ease !important;
+            position: relative;
+            overflow: hidden;
             height: 100%;
         }
 
-        .stats-card:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-2px);
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--card-gradient);
         }
 
-        .stats-card-header {
+        .stat-card:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .card-header-section {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
         }
 
-        .stats-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 0.5rem;
-            display: flex;
+        .stat-icon {
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 0.625rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 1.25rem !important;
+            color: #fff !important;
+            background: var(--card-gradient) !important;
+            flex-shrink: 0;
+        }
+
+        .card-content {
+            margin-top: auto;
+        }
+
+        .stat-value {
+            font-size: 2rem !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            margin-bottom: 0.375rem !important;
+            line-height: 1 !important;
+            letter-spacing: -0.5px;
+        }
+
+        .stat-title {
+            color: #64748b !important;
+            font-size: 0.8rem !important;
+            font-weight: 500 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+        }
+
+        .view-link {
+            font-size: 0.75rem !important;
+            color: #6366f1 !important;
+            text-decoration: none !important;
+            font-weight: 600 !important;
+            padding: 0.375rem 0.75rem !important;
+            border-radius: 0.375rem !important;
+            background: #eff6ff !important;
+            transition: all 0.2s ease !important;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            color: white;
+            gap: 0.35rem;
+            white-space: nowrap;
         }
 
-        .stats-icon.primary {
-            background-color: var(--primary-color);
+        .view-link:hover {
+            background: #dbeafe !important;
         }
 
-        .stats-icon.success {
-            background-color: var(--success-color);
+        .view-link i {
+            font-size: 0.65rem;
+            transition: transform 0.3s ease;
         }
 
-        .stats-icon.warning {
-            background-color: var(--warning-color);
+        .view-link:hover i {
+            transform: translateX(2px);
         }
 
-        .stats-icon.danger {
-            background-color: var(--danger-color);
-        }
-
-        .stats-icon.info {
-            background-color: var(--info-color);
-        }
-
-        .stats-icon.purple {
-            background-color: #8b5cf6;
-        }
-
-        .stats-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .stats-title {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .stats-link {
-            font-size: 0.75rem;
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 500;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .stats-link:hover {
-            background-color: rgba(79, 70, 229, 0.1);
-            color: var(--primary-hover);
-        }
-
-        /* Content sections */
-        .content-section {
-            background: var(--card-bg);
-            border-radius: 0.75rem;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-        }
-
-        /* Loading Spinner */
-        .loading-spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(79, 70, 229, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--primary-color);
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
+        @media (max-width: 991px) {
+            .col-lg-4 { 
+                flex: 0 0 50% !important; 
+                max-width: 50% !important; 
             }
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
+        @media (max-width: 767px) {
+            .sidebar { 
+                transform: translateX(-100%) !important; 
             }
-
-            .sidebar.show {
-                transform: translateX(0);
+            .main-content { 
+                margin-left: 0 !important; 
             }
-
-            .main-content {
-                margin-left: 0;
+            .col-md-6 { 
+                flex: 0 0 100% !important; 
+                max-width: 100% !important; 
             }
-
-            .main-content.expanded {
-                margin-left: 0;
-            }
-
             .topbar {
-                padding: 1rem;
+                padding: 1.25rem 1.5rem !important;
             }
-
             .content {
-                padding: 1rem;
+                padding: 1.5rem !important;
             }
-
-            .mobile-toggle {
-                display: block;
-                background: none;
-                border: none;
-                color: var(--text-secondary);
-                font-size: 1.2rem;
-                cursor: pointer;
-                padding: 0.5rem;
-                border-radius: 0.375rem;
+            .stat-value {
+                font-size: 1.75rem !important;
             }
-
+            .stat-icon {
+                width: 48px !important;
+                height: 48px !important;
+                font-size: 1.25rem !important;
+            }
             .date-filter-form {
-                flex-direction: column;
-                align-items: stretch;
+                flex-direction: column !important;
+                align-items: stretch !important;
             }
-
             .date-input-group {
-                min-width: 100%;
+                min-width: 100% !important;
             }
-        }
-
-        .mobile-toggle {
-            display: none;
         }
     </style>
 </head>
-
 <body>
-    <div class="wrapper">
-        <!-- Sidebar -->
-        <nav class="sidebar" id="sidebar">
+    <div class="d-flex">
+        <nav class="sidebar">
             <div class="sidebar-header">
-                <a href="#" class="logo" onclick="showPage('dashboard')">
-                    <i class="fas fa-tshirt"></i>
-                     <!-- <img src="images/logo.png" alt="Logo" style="width:100%;"> -->
-                    <span>Shades Beauty</span>
+                <a href="index.php?page=dashboard" class="logo">
+                    <i class="fas fa-spa"></i><span>Shades Beauty</span>
                 </a>
-                <button class="sidebar-toggle" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
-                </button>
             </div>
-
-            <ul class="sidebar-nav">
-                <li class="nav-item">
-                    <a href="#" class="nav-link active" onclick="showPage('dashboard')" data-page="dashboard">
-                        <i class="fas fa-home"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showPage('inventory')" data-page="inventory">
-                        <i class="fas fa-boxes"></i>
-                        <span>Inventory</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showPage('orders')" data-page="orders">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Orders</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showPage('customers')" data-page="customers">
-                        <i class="fas fa-users"></i>
-                        <span>Customers</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showPage('enquiries')" data-page="enquiries">
-                        <i class="fas fa-envelope"></i>
-                        <span>Enquiries</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showPage('reviews')" data-page="reviews">
-                        <i class="fas fa-star"></i>
-                        <span>Reviews</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showPage('coupons')" data-page="coupons">
-                        <i class="fas fa-ticket-alt"></i>
-                        <span>Coupons</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showPage('reports')" data-page="reports">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>Reports</span>
-                    </a>
-                </li>
-            </ul>
+            <div class="sidebar-nav">
+                <ul>
+                    <li><a href="index.php?page=dashboard" class="nav-link <?php echo $current_page == 'dashboard' ? 'active' : ''; ?>"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+                    <li><a href="index.php?page=inventory" class="nav-link <?php echo $current_page == 'inventory' ? 'active' : ''; ?>"><i class="fas fa-boxes"></i><span>Inventory</span></a></li>
+                    <li><a href="index.php?page=orders" class="nav-link <?php echo $current_page == 'orders' ? 'active' : ''; ?>"><i class="fas fa-shopping-cart"></i><span>Orders</span></a></li>
+                    <li><a href="index.php?page=customers" class="nav-link <?php echo $current_page == 'customers' ? 'active' : ''; ?>"><i class="fas fa-users"></i><span>Customers</span></a></li>
+                    <li><a href="index.php?page=enquiries" class="nav-link <?php echo $current_page == 'enquiries' ? 'active' : ''; ?>"><i class="fas fa-envelope"></i><span>Enquiries</span></a></li>
+                    <li><a href="index.php?page=reviews" class="nav-link <?php echo $current_page == 'reviews' ? 'active' : ''; ?>"><i class="fas fa-star"></i><span>Reviews</span></a></li>
+                    <li><a href="index.php?page=coupons" class="nav-link <?php echo $current_page == 'coupons' ? 'active' : ''; ?>"><i class="fas fa-ticket-alt"></i><span>Coupons</span></a></li>
+                    <li><a href="index.php?page=reports" class="nav-link <?php echo $current_page == 'reports' ? 'active' : ''; ?>"><i class="fas fa-chart-bar"></i><span>Reports</span></a></li>
+                </ul>
+            </div>
         </nav>
 
-        <!-- Main Content -->
-        <div class="main-content" id="mainContent">
-            <!-- Top Bar -->
+        <div class="main-content">
             <div class="topbar">
-                <div class="topbar-left">
-                    <button class="mobile-toggle" onclick="toggleMobileSidebar()">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <div>
-                        <h4 id="pageTitle">Shades Beauty Dashboard</h4>
-                        <small id="currentDate"></small>
-                    </div>
+                <div>
+                    <h4>
+                        <?php echo $page_title; ?>
+                        <?php if($filter_applied && $current_page == 'dashboard'): ?>
+                        <span class="filter-badge">
+                            <i class="fas fa-filter"></i> Filtered
+                        </span>
+                        <?php endif; ?>
+                    </h4>
+                    <small id="currentDate"></small>
                 </div>
-                <div class="topbar-right">
-                    <select class="form-select form-select-sm">
-                        <option>Select Currency</option>
-                        <option>USD ($)</option>
-                        <option>EUR (€)</option>
-                        <option>GBP (£)</option>
-                    </select>
-                    <div class="dropdown user-dropdown">
-                        <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user me-2"></i>Admin
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                        </ul>
-                    </div>
+                <div>
+                    <button class="btn">
+                        <i class="fas fa-user me-2"></i>Admin
+                    </button>
                 </div>
             </div>
 
-            <!-- Content Area -->
             <div class="content">
-                <!-- Dashboard Page -->
-                <div class="page-content active" id="dashboard-content">
-                    
-                    <!-- Date Range Filter -->
+                <?php if ($current_page == 'dashboard'): ?>
+                    <!-- Dashboard Content -->
                     <div class="date-filter-section">
-                        <form method="GET" class="date-filter-form">
+                        <form method="GET" action="index.php" class="date-filter-form" id="filterForm">
+                            <input type="hidden" name="page" value="dashboard">
                             <div class="date-input-group">
-                                <label>From Date</label>
-                                <input type="date" name="date_from" value="<?php echo $date_from; ?>" required>
+                                <label><i class="fas fa-calendar-alt me-2"></i>From Date</label>
+                                <input type="date" name="date_from" id="date_from" value="<?php echo htmlspecialchars($date_from); ?>" max="<?php echo date('Y-m-d'); ?>" required>
                             </div>
                             <div class="date-input-group">
-                                <label>To Date</label>
-                                <input type="date" name="date_to" value="<?php echo $date_to; ?>" required>
+                                <label><i class="fas fa-calendar-check me-2"></i>To Date</label>
+                                <input type="date" name="date_to" id="date_to" value="<?php echo htmlspecialchars($date_to); ?>" max="<?php echo date('Y-m-d'); ?>" required>
                             </div>
                             <div>
                                 <button type="submit" class="filter-btn">
-                                    <i class="fas fa-search me-2"></i>
+                                    <i class="fas fa-search me-2"></i>Filter
                                 </button>
                             </div>
+                            <?php if($filter_applied): ?>
+                            <!-- <div>
+                                <a href="index.php?page=dashboard" class="reset-btn">
+                                    <i class="fas fa-redo me-2"></i>Reset
+                                </a>
+                            </div> -->
+                            <?php endif; ?>
                         </form>
                         <div class="current-range">
-                            Showing data from <strong><?php echo date('M j, Y', strtotime($date_from)); ?></strong> 
-                            to <strong><?php echo date('M j, Y', strtotime($date_to)); ?></strong>
-                        </div>
+                            <i class="fas fa-info-circle me-2"></i>
+                            <!-- Showing data from <strong><?php //echo date('M j, Y', strtotime($date_from)); ?></strong> to <strong><?php //echo date('M j, Y', strtotime($date_to)); ?></strong> -->
+                            <?php //if(!$filter_applied): ?>
+                            <!-- <span style="color: #6366f1; font-weight: 600;"> (Default: Current Month)</span> -->
+                            <?php //endif; ?>
+                        <!-- </div> -->
                     </div>
 
-                    <!-- Dynamic Stats Cards -->
-                    <div class="row stats-row">
-                        <div class="col-lg-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-card-header">
-                                    <div class="stats-icon success">
-                                        <i class="fas fa-tshirt"></i>
-                                    </div>
-                                    <a href="#" class="stats-link" onclick="showPage('inventory')">Manage</a>
-                                </div>
-                                <div class="stats-number"><?php echo number_format($stats['total_products'] ?? 0); ?></div>
-                                <div class="stats-title">Total Products</div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-card-header">
-                                    <div class="stats-icon purple">
-                                        <i class="fas fa-users"></i>
-                                    </div>
-                                    <a href="#" class="stats-link" onclick="showPage('customers')">View All</a>
-                                </div>
-                                <div class="stats-number"><?php echo number_format($stats['total_customers'] ?? 0); ?></div>
-                                <div class="stats-title">Total Customers</div>
-                            </div>
-                        </div>
-                        <!-- <div class="col-lg-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-card-header">
-                                    <div class="stats-icon warning">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                    </div>
-                                    <a href="#" class="stats-link" onclick="showPage('inventory')">Restock</a>
-                                </div>
-                                <div class="stats-number"><?php echo number_format($stats['low_stock'] ?? 0); ?></div>
-                                <div class="stats-title">Low Stock Items</div>
-                            </div>
-                        </div> -->
-                        <div class="col-lg-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-card-header">
-                                    <div class="stats-icon danger">
-                                        <i class="fas fa-shopping-bag"></i>
-                                    </div>
-                                    <a href="#" class="stats-link" onclick="showPage('orders')">Process</a>
-                                </div>
-                                <div class="stats-number"><?php echo number_format($stats['total_orders'] ?? 0); ?></div>
-                                <div class="stats-title">Orders</div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-card-header">
-                                    <div class="stats-icon info">
-                                        <i class="fas fa-clock"></i>
-                                    </div>
-                                </div>
-                                <div class="stats-number"><?php echo number_format($stats['pending_orders'] ?? 0); ?></div>
-                                <div class="stats-title">Pending Orders</div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-card-header">
-                                    <div class="stats-icon success">
-                                        <i class="fas fa-check-circle"></i>
-                                    </div>
-                                </div>
-                                <div class="stats-number"><?php echo number_format($stats['completed_orders'] ?? 0); ?></div>
-                                <div class="stats-title">Completed Orders</div>
-                            </div>
-                        </div>
-                        <!-- <div class="col-lg-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-card-header">
-                                    <div class="stats-icon success">
-                                        <i class="fas fa-dollar-sign"></i>
-                                    </div>
-                                </div>
-                                <div class="stats-number">$<?php echo number_format($stats['today_revenue'] ?? 0, 2); ?></div>
-                                <div class="stats-title">Today's Revenue</div>
-                            </div>
-                        </div> -->
-                        <div class="col-lg-3 col-md-6 mb-4">
-                            <div class="stats-card">
-                                <div class="stats-card-header">
-                                    <div class="stats-icon primary">
-                                        <i class="fas fa-chart-line"></i>
-                                    </div>
-                                </div>
-                                <div class="stats-number">Rwf<?php echo number_format($stats['total_revenue'] ?? 0, 2); ?></div>
-                                <div class="stats-title">Revenue</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Additional Insights Row -->
                     <div class="row">
-                        <div class="col-lg-6 mb-4">
-                            <div class="content-section">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-chart-bar me-2 text-primary"></i>
-                                    Quick Insights
-                                </h5>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="text-center p-3">
-                                            <div class="stats-number text-info" style="font-size: 1.5rem;">
-                                                <?php echo number_format($stats['new_customers'] ?? 0); ?>
-                                            </div>
-                                            <div class="stats-title">New Customers</div>
-                                        </div>
+                        <?php
+                        $cards = [
+                            ['icon'=>'fa-box', 'gradient'=>'linear-gradient(135deg, #6366f1, #a855f7)', 'num'=>$stats['total_products']??0, 'title'=>'Total Products', 'link'=>'inventory'],
+                            ['icon'=>'fa-users', 'gradient'=>'linear-gradient(135deg, #ec4899, #f43f5e)', 'num'=>$stats['total_customers']??0, 'title'=>'Total Customers', 'link'=>'customers'],
+                            ['icon'=>'fa-shopping-cart', 'gradient'=>'linear-gradient(135deg, #14b8a6, #06b6d4)', 'num'=>$stats['total_orders']??0, 'title'=>'Total Orders', 'link'=>'orders'],
+                            ['icon'=>'fa-clock', 'gradient'=>'linear-gradient(135deg, #f59e0b, #f97316)', 'num'=>$stats['pending_orders']??0, 'title'=>'Pending Orders', 'link'=>'orders'],
+                            ['icon'=>'fa-check-double', 'gradient'=>'linear-gradient(135deg, #10b981, #059669)', 'num'=>$stats['completed_orders']??0, 'title'=>'Completed Orders', 'link'=>'orders'],
+                            ['icon'=>'fa-money-bill-wave', 'gradient'=>'linear-gradient(135deg, #8b5cf6, #6366f1)', 'num'=>'Rwf '.number_format($stats['total_revenue']??0,2), 'title'=>'Total Revenue', 'link'=>'reports']
+                        ];
+                        foreach($cards as $c):
+                        ?>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="stat-card" style="--card-gradient: <?php echo $c['gradient']; ?>">
+                                <div class="card-header-section">
+                                    <div class="stat-icon">
+                                        <i class="fas <?php echo $c['icon']; ?>"></i>
                                     </div>
-                                    <div class="col-6">
-                                        <div class="text-center p-3">
-                                            <div class="stats-number text-success" style="font-size: 1.5rem;">
-                                                <?php echo number_format($stats['products_added'] ?? 0); ?>
-                                            </div>
-                                            <div class="stats-title">Products Added</div>
-                                        </div>
-                                    </div>
+                                    <?php if($c['link']): ?>
+                                    <a href="index.php?page=<?php echo $c['link']; ?>" class="view-link">
+                                        View <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="card-content">
+                                    <div class="stat-value"><?php echo $c['num']; ?></div>
+                                    <div class="stat-title"><?php echo $c['title']; ?></div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-6 mb-4">
-                            <div class="content-section">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-database me-2 text-primary"></i>
-                                    Available Tables
-                                </h5>
-                                <div class="table-badges">
-                                    <?php foreach ($available_tables as $table): ?>
-                                    <span class="badge bg-light text-dark me-1 mb-1"><?php echo $table; ?></span>
-                                    <?php endforeach; ?>
-                                </div>
-                                <small class="text-muted d-block mt-2">
-                                    Dashboard automatically detects and uses available database tables
-                                </small>
-                            </div>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
-                </div>
 
-                <!-- All other pages with dynamic content containers -->
-                <div class="page-content" id="inventory-content">
-                    <div class="content-section" style="padding: 0;">
-                        <div id="inventory-dynamic-content">
-                            <div class="text-center p-5">
-                                <div class="loading-spinner mb-3"></div>
-                                <p>Loading inventory data...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="page-content" id="orders-content">
-                    <div class="content-section" style="padding: 0;">
-                        <div id="orders-dynamic-content">
-                            <div class="text-center p-5">
-                                <div class="loading-spinner mb-3"></div>
-                                <p>Loading orders data...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="page-content" id="customers-content">
-                    <div class="content-section" style="padding: 0;">
-                        <div id="customers-dynamic-content">
-                            <div class="text-center p-5">
-                                <div class="loading-spinner mb-3"></div>
-                                <p>Loading customers data...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="page-content" id="enquiries-content">
-                    <div class="content-section" style="padding: 0;">
-                        <div id="enquiries-dynamic-content">
-                            <div class="text-center p-5">
-                                <div class="loading-spinner mb-3"></div>
-                                <p>Loading enquiries data...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="page-content" id="reviews-content">
-                    <div class="content-section" style="padding: 0;">
-                        <div id="reviews-dynamic-content">
-                            <div class="text-center p-5">
-                                <div class="loading-spinner mb-3"></div>
-                                <p>Loading reviews data...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="page-content" id="coupons-content">
-                    <div class="content-section" style="padding: 0;">
-                        <div id="coupons-dynamic-content">
-                            <div class="text-center p-5">
-                                <div class="loading-spinner mb-3"></div>
-                                <p>Loading coupons data...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="page-content" id="reports-content">
-                    <div class="content-section" style="padding: 0;">
-                        <div id="reports-dynamic-content">
-                            <div class="text-center p-5">
-                                <div class="loading-spinner mb-3"></div>
-                                <p>Loading reports data...</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <?php else: ?>
+                    <!-- Dynamic Page Content -->
+                    <?php
+                    $file_name = $current_page === 'inventory' ? 'product_content.php' : $current_page . '.php';
+                    
+                    if (file_exists($file_name)) {
+                        include($file_name);
+                    } else {
+                        echo '<div class="alert alert-warning m-4">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Page not found:</strong> The file "' . htmlspecialchars($file_name) . '" does not exist.
+                                <br><small>Please create this file in the same directory.</small>
+                              </div>';
+                    }
+                    ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-
     <script>
-        // State management for pages
-        let pageStates = {};
-        let contentCache = {};
-
-        // Initialize date and update every minute
         function updateDateTime() {
-            document.getElementById('currentDate').textContent = new Date().toLocaleString('en-US', {
+            const now = new Date();
+            const options = {
                 weekday: 'short',
                 year: 'numeric',
                 month: 'short',
                 day: '2-digit',
                 hour: '2-digit',
                 minute: '2-digit'
-            });
+            };
+            document.getElementById('currentDate').textContent = now.toLocaleString('en-US', options);
         }
         updateDateTime();
         setInterval(updateDateTime, 60000);
 
-        // Get current page from URL
-        function getCurrentPageFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const page = urlParams.get('page');
-            return page || 'dashboard';
-        }
+        // Validate date range
+        const filterForm = document.getElementById('filterForm');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function(e) {
+                const fromDate = new Date(document.getElementById('date_from').value);
+                const toDate = new Date(document.getElementById('date_to').value);
+                
+                if (fromDate > toDate) {
+                    e.preventDefault();
+                    alert('From Date cannot be later than To Date');
+                    return false;
+                }
+            });
 
-        // Update URL without page reload
-        function updateURL(pageName) {
-            // Preserve date filter parameters when changing pages
-            const urlParams = new URLSearchParams(window.location.search);
-            if (pageName === 'dashboard') {
-                // Keep date filters for dashboard
-                const params = [];
-                if (urlParams.get('date_from')) params.push(`date_from=${urlParams.get('date_from')}`);
-                if (urlParams.get('date_to')) params.push(`date_to=${urlParams.get('date_to')}`);
-                const queryString = params.length > 0 ? '?' + params.join('&') : '';
-                const newUrl = window.location.pathname + queryString;
-                window.history.pushState({ page: pageName }, '', newUrl);
-            } else {
-                urlParams.set('page', pageName);
-                window.history.pushState({ page: pageName }, '', '?' + urlParams.toString());
-            }
-        }
-
-        function loadPageContent(pageName, phpFileName = null) {
-            const contentDiv = document.getElementById(`${pageName}-dynamic-content`);
-            if (!contentDiv) return;
-
-            const fileName = phpFileName || `${pageName}.php`;
-
-            // If we have cached content, restore it
-            if (contentCache[pageName]) {
-                contentDiv.innerHTML = contentCache[pageName];
-                restorePageState(pageName);
-                initializePageListeners(pageName);
-                return;
-            }
-
-            // Show loading
-            const loadingHTML = `
-        <div class="text-center p-5">
-            <div class="loading-spinner mb-3"></div>
-            <h5 class="text-muted">Loading ${pageName.charAt(0).toUpperCase() + pageName.slice(1)} Management</h5>
-            <p class="text-muted">Please wait while we fetch your ${pageName} data...</p>
-        </div>
-    `;
-
-            contentDiv.innerHTML = loadingHTML;
-
-            // Fetch content
-            fetch(fileName)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    return response.text();
-                })
-                .then(html => {
-                    // Parse the HTML
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-
-                    // Extract and inject CSS styles
-                    const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
-                    styles.forEach(styleElement => {
-                        const existingStyle = document.head.querySelector(`[data-loaded-from="${fileName}"]`);
-                        if (!existingStyle || styleElement.tagName === 'LINK') {
-                            const newStyleElement = styleElement.cloneNode(true);
-                            newStyleElement.setAttribute('data-loaded-from', fileName);
-                            document.head.appendChild(newStyleElement);
-                        }
-                    });
-
-                    // Extract body content
-                    const bodyContent = doc.body.innerHTML;
-
-                    // Cache the content
-                    contentCache[pageName] = bodyContent;
-                    contentDiv.innerHTML = bodyContent;
-
-                    // Initialize event listeners
-                    initializePageListeners(pageName);
-
-                    // Restore previous state
-                    restorePageState(pageName);
-
-                    // Re-initialize scripts
-                    const scripts = doc.querySelectorAll('script');
-                    scripts.forEach((script, index) => {
-                        // Skip common libraries to avoid conflicts
-                        if (script.src && (
-                                script.src.includes('bootstrap') ||
-                                script.src.includes('jquery') ||
-                                script.src.includes('cdnjs.cloudflare.com')
-                            )) {
-                            return;
-                        }
-
-                        // Create unique identifier
-                        const scriptId = `script-${fileName}-${index}`;
-                        const existingScript = document.head.querySelector(`#${scriptId}`);
-
-                        if (!existingScript) {
-                            const newScript = document.createElement('script');
-                            newScript.id = scriptId;
-                            newScript.setAttribute('data-loaded-from', fileName);
-
-                            if (script.src) {
-                                newScript.src = script.src;
-                            } else {
-                                newScript.textContent = script.textContent;
-                            }
-
-                            // Append to body instead of head for better execution
-                            document.body.appendChild(newScript);
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error(`Error loading ${pageName}:`, error);
-                    const errorHTML = `
-                <div class="text-center p-5">
-                    <div class="alert alert-danger d-inline-block" role="alert">
-                        <div class="text-center mb-3">
-                            <i class="fas fa-exclamation-triangle fs-1 text-danger"></i>
-                        </div>
-                        <h5 class="text-center">Unable to Load ${pageName.charAt(0).toUpperCase() + pageName.slice(1)}</h5>
-                        <hr>
-                        <p><strong>Error:</strong> ${error.message}</p>
-                        <p><strong>Possible Solutions:</strong></p>
-                        <ul class="text-start">
-                            <li>Ensure '${fileName}' file exists in the same directory</li>
-                            <li>Check file permissions and server configuration</li>
-                            <li>Verify database connection</li>
-                        </ul>
-                        <button class="btn btn-outline-danger btn-sm mt-2" onclick="loadPageContent('${pageName}', '${fileName}')">
-                            <i class="fas fa-redo me-2"></i>Try Again
-                        </button>
-                    </div>
-                </div>
-            `;
-                    contentDiv.innerHTML = errorHTML;
+            // Update To Date minimum when From Date changes
+            const dateFrom = document.getElementById('date_from');
+            const dateTo = document.getElementById('date_to');
+            
+            if (dateFrom && dateTo) {
+                dateFrom.addEventListener('change', function() {
+                    dateTo.min = this.value;
                 });
+
+                dateTo.addEventListener('change', function() {
+                    dateFrom.max = this.value;
+                });
+            }
         }
 
-        // Initialize page listeners
-        function initializePageListeners(pageName) {
-            const contentDiv = document.getElementById(`${pageName}-dynamic-content`);
-            if (!contentDiv) return;
-
-            contentDiv.addEventListener('input', () => saveCurrentPageState());
-            contentDiv.addEventListener('change', () => saveCurrentPageState());
-            contentDiv.addEventListener('click', () => saveCurrentPageState());
-        }
-
-        // Enhanced page navigation with dynamic content loading
-        function showPage(pageName, updateUrl = true) {
-            saveCurrentPageState();
-
-            if (updateUrl) {
-                updateURL(pageName);
-            }
-
-            document.querySelectorAll('.page-content').forEach(content => {
-                content.classList.remove('active');
-            });
-
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-
-            const targetPage = document.getElementById(pageName + '-content');
-            if (targetPage) {
-                targetPage.classList.add('active');
-            }
-
-            const navLink = document.querySelector(`[data-page="${pageName}"]`);
-            if (navLink) {
-                navLink.classList.add('active');
-            }
-
-            const pageTitles = {
-                'dashboard': 'Shades Beauty Dashboard',
-                'inventory': 'Inventory Management',
-                'orders': 'Orders Management',
-                'customers': 'Customer Management',
-                'enquiries': 'Customer Enquiries',
-                'reviews': 'Customer Reviews',
-                'coupons': 'Coupons Management',
-                'reports': 'Sales Reports'
-            };
-
-            document.getElementById('pageTitle').textContent = pageTitles[pageName] || 'Shades Beauty Admin';
-
-            const pagesWithDynamicContent = ['inventory', 'orders', 'customers', 'enquiries', 'reviews', 'coupons', 'reports'];
-
-            if (pagesWithDynamicContent.includes(pageName)) {
-                if (pageName === 'inventory') {
-                    loadPageContent('inventory', 'product_content.php');
-                } else {
-                    loadPageContent(pageName);
-                }
-            }
-
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-
-        // Save current page state
-        function saveCurrentPageState() {
-            const currentPage = document.querySelector('.page-content.active');
-            if (!currentPage) return;
-
-            const pageId = currentPage.id.replace('-content', '');
-
-            const state = {
-                scrollPosition: window.pageYOffset,
-                inputs: {},
-                selects: {},
-                checkboxes: {},
-                activeTab: null
-            };
-
-            currentPage.querySelectorAll('input').forEach(input => {
-                if (input.id || input.name) {
-                    const key = input.id || input.name;
-                    if (input.type === 'checkbox') {
-                        state.checkboxes[key] = input.checked;
-                    } else {
-                        state.inputs[key] = input.value;
-                    }
-                }
-            });
-
-            currentPage.querySelectorAll('select').forEach(select => {
-                if (select.id || select.name) {
-                    const key = select.id || select.name;
-                    state.selects[key] = select.value;
-                }
-            });
-
-            const activeTab = currentPage.querySelector('.nav-link.active, .tab-pane.active');
-            if (activeTab) {
-                state.activeTab = activeTab.id || activeTab.getAttribute('data-bs-target');
-            }
-
-            pageStates[pageId] = state;
-        }
-
-        // Restore page state
-        function restorePageState(pageName) {
-            const state = pageStates[pageName];
-            if (!state) return;
-
-            const page = document.getElementById(pageName + '-content');
-            if (!page) return;
-
+        // Fade-in animation for stat cards
+        const cards = document.querySelectorAll('.stat-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            
             setTimeout(() => {
-                Object.entries(state.inputs).forEach(([key, value]) => {
-                    const element = page.querySelector(`#${key}, [name="${key}"]`);
-                    if (element) {
-                        element.value = value;
-                        element.dispatchEvent(new Event('input', {
-                            bubbles: true
-                        }));
-                    }
-                });
-
-                Object.entries(state.selects).forEach(([key, value]) => {
-                    const element = page.querySelector(`#${key}, [name="${key}"]`);
-                    if (element) {
-                        element.value = value;
-                        element.dispatchEvent(new Event('change', {
-                            bubbles: true
-                        }));
-                    }
-                });
-
-                Object.entries(state.checkboxes).forEach(([key, checked]) => {
-                    const element = page.querySelector(`#${key}, [name="${key}"]`);
-                    if (element) {
-                        element.checked = checked;
-                        element.dispatchEvent(new Event('change', {
-                            bubbles: true
-                        }));
-                    }
-                });
-
-                if (state.activeTab) {
-                    const tabElement = page.querySelector(`[data-bs-target="${state.activeTab}"], #${state.activeTab}`);
-                    if (tabElement && tabElement.click) {
-                        tabElement.click();
-                    }
-                }
-
-                if (state.scrollPosition) {
-                    window.scrollTo({
-                        top: state.scrollPosition,
-                        behavior: 'smooth'
-                    });
-                }
-            }, 100);
-        }
-
-        // Handle browser back/forward buttons
-        window.addEventListener('popstate', function(event) {
-            const page = event.state ? event.state.page : getCurrentPageFromUrl();
-            showPage(page, false);
+                card.style.transition = 'all 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
         });
-
-        // Sidebar toggle
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        }
-
-        // Mobile sidebar toggle
-        function toggleMobileSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('show');
-        }
-
-        // Close mobile sidebar when clicking outside
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const mobileToggle = document.querySelector('.mobile-toggle');
-
-            if (window.innerWidth <= 768 &&
-                !sidebar.contains(event.target) &&
-                !mobileToggle.contains(event.target)) {
-                sidebar.classList.remove('show');
-            }
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            const sidebar = document.getElementById('sidebar');
-            if (window.innerWidth > 768) {
-                sidebar.classList.remove('show');
-            }
-        });
-
-        // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            if (sidebarCollapsed) {
-                document.getElementById('sidebar').classList.add('collapsed');
-                document.getElementById('mainContent').classList.add('expanded');
-            }
-
-            const currentPage = getCurrentPageFromUrl();
-            showPage(currentPage, false);
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-            if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
-                switch (e.key.toLowerCase()) {
-                    case 'd':
-                        e.preventDefault();
-                        showPage('dashboard');
-                        break;
-                    case 'i':
-                        e.preventDefault();
-                        showPage('inventory');
-                        break;
-                    case 'o':
-                        e.preventDefault();
-                        showPage('orders');
-                        break;
-                    case 'c':
-                        e.preventDefault();
-                        showPage('customers');
-                        break;
-                }
-            }
-
-            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-                e.preventDefault();
-                toggleSidebar();
-            }
-        });
-
-        console.log('Dynamic Dashboard initialized successfully');
-        console.log('Available tables: <?php echo json_encode($available_tables); ?>');
-        console.log('Date range: <?php echo $date_from; ?> to <?php echo $date_to; ?>');
     </script>
 </body>
-
 </html>

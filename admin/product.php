@@ -14,7 +14,8 @@ $message_type = '';
 /**
  * Ensure a directory exists and is writable
  */
-function ensure_dir(string $dir, array &$errors): bool {
+function ensure_dir(string $dir, array &$errors): bool
+{
     if (!is_dir($dir)) {
         if (!mkdir($dir, 0777, true)) {
             $errors[] = "Failed to create directory: $dir";
@@ -35,7 +36,8 @@ function ensure_dir(string $dir, array &$errors): bool {
  * Image upload handler with strong validation and diagnostics
  * Returns a web path like "uploads/products/abc123.jpg" or null
  */
-function handle_upload(array $file = null, string $subfolder = 'products', array &$errors = []): ?string {
+function handle_upload(array $file = null, string $subfolder = 'products', array &$errors = []): ?string
+{
     if (!$file || !isset($file['error']) || $file['error'] === UPLOAD_ERR_NO_FILE) {
         return null; // no file selected
     }
@@ -105,10 +107,11 @@ function handle_upload(array $file = null, string $subfolder = 'products', array
 /**
  * Convert CSV string to JSON array string for JSON columns, or NULL
  */
-function csv_to_json_or_null(?string $csv): ?string {
+function csv_to_json_or_null(?string $csv): ?string
+{
     $csv = trim((string)$csv);
     if ($csv === '') return null;
-    $arr = array_values(array_filter(array_map('trim', explode(',', $csv)), fn($v)=>$v!==''));
+    $arr = array_values(array_filter(array_map('trim', explode(',', $csv)), fn($v) => $v !== ''));
     if (!$arr) return null;
     $json = json_encode($arr, JSON_UNESCAPED_UNICODE);
     return $json ?: null;
@@ -211,8 +214,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product'])) {
             $season         = $_POST['season'] ?? '';
             $status         = $_POST['status'] ?? 'active';
             $is_featured    = isset($_POST['is_featured']) ? 1 : 0;
-            $track_inventory= isset($_POST['track_inventory']) ? 1 : 0;
-            $allow_backorder= isset($_POST['allow_backorder']) ? 1 : 0;
+            $track_inventory = isset($_POST['track_inventory']) ? 1 : 0;
+            $allow_backorder = isset($_POST['allow_backorder']) ? 1 : 0;
 
             $sql = "INSERT INTO products (
                 product_name, sku, category, price, sale_price, cost_price, quantity, min_stock,
@@ -263,18 +266,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product'])) {
    ============================ */
 $categories = [];
 $res = $conn->query("SELECT id, category_name FROM categories WHERE status = 'active' ORDER BY category_name");
-if ($res) { while ($row = $res->fetch_assoc()) { $categories[] = $row; } }
+if ($res) {
+    while ($row = $res->fetch_assoc()) {
+        $categories[] = $row;
+    }
+}
 
 $display_categories = [];
 $res = $conn->query("SELECT * FROM categories ORDER BY created_at DESC");
-if ($res) { while ($row = $res->fetch_assoc()) { $display_categories[] = $row; } }
+if ($res) {
+    while ($row = $res->fetch_assoc()) {
+        $display_categories[] = $row;
+    }
+}
 
 $display_products = [];
 $res = $conn->query("SELECT * FROM products ORDER BY created_at DESC");
-if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
+if ($res) {
+    while ($row = $res->fetch_assoc()) {
+        $display_products[] = $row;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
@@ -282,6 +298,8 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+
     <style>
         :root {
             --primary-blue: #2563eb;
@@ -299,7 +317,11 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
             --shadow-lg: rgba(0, 0, 0, 0.15);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             background-color: var(--light-gray);
@@ -438,7 +460,8 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
             margin-bottom: 0.5rem;
         }
 
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             background: var(--white);
             border: 1px solid var(--border-gray);
             border-radius: 8px;
@@ -447,7 +470,8 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
             font-size: 0.9rem;
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             border-color: var(--primary-blue);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
             outline: none;
@@ -607,7 +631,8 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
             gap: 0.5rem;
         }
 
-        .size-selection, .color-selection {
+        .size-selection,
+        .color-selection {
             display: flex;
             flex-wrap: wrap;
             gap: 0.5rem;
@@ -702,18 +727,20 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
             .page-container {
                 padding: 1rem;
             }
-            
+
             .table-responsive {
                 font-size: 0.85rem;
             }
-            
+
             .modal-dialog {
                 margin: 1rem;
             }
         }
     </style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 </head>
-
 <body>
     <div class="page-container">
         <?php if (!empty($message)): ?>
@@ -725,7 +752,7 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
 
         <!-- Page Header -->
         <!-- <div class="page-header"> -->
-            <!-- <div class="d-flex justify-content-between align-items-center">
+        <!-- <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="page-title">Inventory Management</h1>
                     <p class="page-subtitle">Manage your fashion categories and products</p>
@@ -790,7 +817,7 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
                     <!-- Categories Table -->
                     <div class="table-container">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="productTable">
                                 <thead>
                                     <tr>
                                         <th>Image</th>
@@ -802,29 +829,29 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
                                     </tr>
                                 </thead>
                                 <tbody>
-                                <?php foreach ($display_categories as $category): ?>
-                                    <tr>
-                                        <td>
-                                            <?php if ($category['category_image']): ?>
-                                                <img src="<?= htmlspecialchars($category['category_image']) ?>" class="image-preview" alt="Category Image">
-                                            <?php else: ?>
-                                                <img src="https://via.placeholder.com/60x60/d4af37/ffffff?text=IMG" class="image-preview" alt="No Image">
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><strong><?= htmlspecialchars($category['category_name']) ?></strong></td>
-                                        <td><?= htmlspecialchars($category['description']) ?></td>
-                                        <td>
-                                            <span class="badge-status <?= $category['status'] === 'active' ? 'badge-active' : 'badge-inactive' ?>">
-                                                <?= ucfirst($category['status']) ?>
-                                            </span>
-                                        </td>
-                                        <td><?= date('M d, Y', strtotime($category['created_at'])) ?></td>
-                                        <td>
-                                            <button class="btn btn-action btn-edit" onclick="editCategory(<?= (int)$category['id'] ?>)"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-action btn-delete" onclick="deleteCategory(<?= (int)$category['id'] ?>)"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                                    <?php foreach ($display_categories as $category): ?>
+                                        <tr>
+                                            <td>
+                                                <?php if ($category['category_image']): ?>
+                                                    <img src="<?= htmlspecialchars($category['category_image']) ?>" class="image-preview" alt="Category Image">
+                                                <?php else: ?>
+                                                    <img src="https://via.placeholder.com/60x60/d4af37/ffffff?text=IMG" class="image-preview" alt="No Image">
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><strong><?= htmlspecialchars($category['category_name']) ?></strong></td>
+                                            <td><?= htmlspecialchars($category['description']) ?></td>
+                                            <td>
+                                                <span class="badge-status <?= $category['status'] === 'active' ? 'badge-active' : 'badge-inactive' ?>">
+                                                    <?= ucfirst($category['status']) ?>
+                                                </span>
+                                            </td>
+                                            <td><?= date('M d, Y', strtotime($category['created_at'])) ?></td>
+                                            <td>
+                                                <button class="btn btn-action btn-edit" onclick="editCategory(<?= (int)$category['id'] ?>)"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-action btn-delete" onclick="deleteCategory(<?= (int)$category['id'] ?>)"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -884,7 +911,7 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
                     <!-- Products Table -->
                     <div class="table-container">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table" id="categoryTable">
                                 <thead>
                                     <tr>
                                         <th>Image</th>
@@ -897,49 +924,54 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
                                     </tr>
                                 </thead>
                                 <tbody>
-                                <?php foreach ($display_products as $product): ?>
-                                    <tr>
-                                        <td>
-                                            <?php if ($product['product_image']): ?>
-                                                <img src="<?= htmlspecialchars($product['product_image']) ?>" class="image-preview" alt="Product Image">
-                                            <?php else: ?>
-                                                <img src="https://via.placeholder.com/60x60/d4af37/ffffff?text=IMG" class="image-preview" alt="No Image">
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <strong><?= htmlspecialchars($product['product_name']) ?></strong><br>
-                                            <small class="text-muted">SKU: <?= htmlspecialchars($product['sku']) ?></small>
-                                        </td>
-                                        <td><?= htmlspecialchars($product['category']) ?></td>
-                                        <td>
-                                            <strong>$<?= number_format((float)$product['price'], 2) ?></strong>
-                                            <?php if (!is_null($product['sale_price']) && $product['sale_price'] !== ''): ?>
-                                                <br><small class="text-muted">Sale: $<?= number_format((float)$product['sale_price'], 2) ?></small>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <?php
-                                            $qty = (int)$product['quantity'];
-                                            $min = isset($product['min_stock']) ? (int)$product['min_stock'] : null;
-                                            $stock_class = 'bg-success';
-                                            $stock_text = 'In Stock';
-                                            if ($qty === 0) { $stock_class = 'bg-danger'; $stock_text = 'Out of Stock'; }
-                                            elseif (!is_null($min) && $qty <= $min) { $stock_class = 'bg-warning text-dark'; $stock_text = 'Low Stock'; }
-                                            ?>
-                                            <span class="badge <?= $stock_class ?>"><?= $qty ?></span>
-                                            <small class="text-muted d-block"><?= $stock_text ?></small>
-                                        </td>
-                                        <td>
-                                            <span class="badge-status <?= $product['status'] === 'active' ? 'badge-active' : 'badge-inactive' ?>">
-                                                <?= ucfirst($product['status']) ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-action btn-edit" onclick="editProduct(<?= (int)$product['id'] ?>)"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-action btn-delete" onclick="deleteProduct(<?= (int)$product['id'] ?>)"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                                    <?php foreach ($display_products as $product): ?>
+                                        <tr>
+                                            <td>
+                                                <?php if ($product['product_image']): ?>
+                                                    <img src="<?= htmlspecialchars($product['product_image']) ?>" class="image-preview" alt="Product Image">
+                                                <?php else: ?>
+                                                    <img src="https://via.placeholder.com/60x60/d4af37/ffffff?text=IMG" class="image-preview" alt="No Image">
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <strong><?= htmlspecialchars($product['product_name']) ?></strong><br>
+                                                <small class="text-muted">SKU: <?= htmlspecialchars($product['sku']) ?></small>
+                                            </td>
+                                            <td><?= htmlspecialchars($product['category']) ?></td>
+                                            <td>
+                                                <strong>$<?= number_format((float)$product['price'], 2) ?></strong>
+                                                <?php if (!is_null($product['sale_price']) && $product['sale_price'] !== ''): ?>
+                                                    <br><small class="text-muted">Sale: $<?= number_format((float)$product['sale_price'], 2) ?></small>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php
+                                                $qty = (int)$product['quantity'];
+                                                $min = isset($product['min_stock']) ? (int)$product['min_stock'] : null;
+                                                $stock_class = 'bg-success';
+                                                $stock_text = 'In Stock';
+                                                if ($qty === 0) {
+                                                    $stock_class = 'bg-danger';
+                                                    $stock_text = 'Out of Stock';
+                                                } elseif (!is_null($min) && $qty <= $min) {
+                                                    $stock_class = 'bg-warning text-dark';
+                                                    $stock_text = 'Low Stock';
+                                                }
+                                                ?>
+                                                <span class="badge <?= $stock_class ?>"><?= $qty ?></span>
+                                                <small class="text-muted d-block"><?= $stock_text ?></small>
+                                            </td>
+                                            <td>
+                                                <span class="badge-status <?= $product['status'] === 'active' ? 'badge-active' : 'badge-inactive' ?>">
+                                                    <?= ucfirst($product['status']) ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-action btn-edit" onclick="editProduct(<?= (int)$product['id'] ?>)"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-action btn-delete" onclick="deleteProduct(<?= (int)$product['id'] ?>)"><i class="fas fa-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -956,41 +988,41 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
             <div class="modal-content">
                 <form method="POST" enctype="multipart/form-data">
                     <form method="POST" enctype="multipart/form-data" action="product_content.php">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Add New Category</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Category Name <span class="required">*</span></label>
-                                <input type="text" class="form-control" name="category_name" required>
+                        <div class="modal-header">
+                            <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>Add New Category</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Category Name <span class="required">*</span></label>
+                                    <input type="text" class="form-control" name="category_name" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-select" name="status">
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Status</label>
-                                <select class="form-select" name="status">
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" name="description" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Category Image</label>
+                                <input type="file" class="form-control" name="category_image" accept="image/*">
+                                <small class="text-muted d-block mt-1">Allowed: JPG, PNG, GIF, WEBP. Max 5MB.</small>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Description</label>
-                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary-custom" name="save_category">
+                                <i class="fas fa-save me-2"></i>Save Category
+                            </button>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Category Image</label>
-                            <input type="file" class="form-control" name="category_image" accept="image/*">
-                            <small class="text-muted d-block mt-1">Allowed: JPG, PNG, GIF, WEBP. Max 5MB.</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary-custom" name="save_category">
-                            <i class="fas fa-save me-2"></i>Save Category
-                        </button>
-                    </div>
-                </form>
+                    </form>
             </div>
         </div>
     </div>
@@ -1225,9 +1257,9 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
             const preview = document.getElementById('imagePreview');
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(ev) { 
-                    preview.src = ev.target.result; 
-                    preview.style.display = 'block'; 
+                reader.onload = function(ev) {
+                    preview.src = ev.target.result;
+                    preview.style.display = 'block';
                 };
                 reader.readAsDataURL(file);
             } else {
@@ -1240,20 +1272,20 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
             const productName = e.target.value;
             const skuField = document.getElementById('sku');
             if (productName && skuField.value === '') {
-                const sku = productName.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6)
-                    + '-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+                const sku = productName.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6) +
+                    '-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
                 skuField.value = sku;
             }
         });
 
         // Size selection
         document.querySelectorAll('.size-option').forEach(option => {
-            option.addEventListener('click', function() { 
-                this.classList.toggle('selected'); 
-                updateSizes(); 
+            option.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                updateSizes();
             });
         });
-        
+
         function updateSizes() {
             const selectedSizes = Array.from(document.querySelectorAll('.size-option.selected')).map(o => o.dataset.size);
             document.getElementById('sizes').value = selectedSizes.join(',');
@@ -1261,12 +1293,12 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
 
         // Color selection
         document.querySelectorAll('.color-option').forEach(option => {
-            option.addEventListener('click', function() { 
-                this.classList.toggle('selected'); 
-                updateColors(); 
+            option.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                updateColors();
             });
         });
-        
+
         function updateColors() {
             const selectedColors = Array.from(document.querySelectorAll('.color-option.selected')).map(o => o.dataset.color);
             document.getElementById('colors').value = selectedColors.join(',');
@@ -1283,12 +1315,46 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
         });
 
         // Placeholder actions
-        function editCategory(id) { alert('Edit category not implemented. ID: ' + id); }
-        function deleteCategory(id) { if (confirm('Delete this category?')) alert('Delete category not implemented. ID: ' + id); }
-        function editProduct(id) { alert('Edit product not implemented. ID: ' + id); }
-        function deleteProduct(id) { if (confirm('Delete this product?')) alert('Delete product not implemented. ID: ' + id); }
-        function exportData() { alert('Export not implemented.'); }
-        function showImportModal() { alert('Import not implemented.'); }
+        function editCategory(id) {
+            alert('Edit category not implemented. ID: ' + id);
+        }
+
+        function deleteCategory(id) {
+            if (confirm('Delete this category?')) alert('Delete category not implemented. ID: ' + id);
+        }
+
+        function editProduct(id) {
+            alert('Edit product not implemented. ID: ' + id);
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Delete this product?')) alert('Delete product not implemented. ID: ' + id);
+        }
+
+        function exportData() {
+            alert('Export not implemented.');
+        }
+
+        function showImportModal() {
+            alert('Import not implemented.');
+        }
+        $(document).ready(function() {
+            $('#productTable').DataTable({
+                pageLength: 10, // number of rows per page
+                lengthMenu: [5, 10, 25, 50, 100], // dropdown options
+                ordering: true, // enable sorting
+                searching: true // enable search box
+            });
+        });
+          $(document).ready(function() {
+            $('#categoryTable').DataTable({
+                pageLength: 10, // number of rows per page
+                lengthMenu: [5, 10, 25, 50, 100], // dropdown options
+                ordering: true, // enable sorting
+                searching: true // enable search box
+            });
+        });
     </script>
 </body>
+
 </html>

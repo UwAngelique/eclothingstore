@@ -1,10 +1,176 @@
+<?php
+// Database configuration
+$host = 'localhost';
+$dbname = 'agmsdb';
+$username = 'root';
+$password = 'yego';
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch(PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
+}
+
+// Get date range from URL parameters
+$date_from = $_GET['date_from'] ?? date('Y-m-01'); // Default to start of current month
+$date_to = $_GET['date_to'] ?? date('Y-m-d'); // Default to today
+
+// Auto-detect available tables
+function getAvailableTables($pdo) {
+    $stmt = $pdo->query("SHOW TABLES");
+    return $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+
+$available_tables = getAvailableTables($pdo);
+
+// Function to get dynamic stats based on available tables
+function getDynamicStats($pdo, $available_tables, $date_from, $date_to) {
+    $stats = [];
+    
+    // Products/Inventory stats
+    $product_tables = ['products', 'product', 'items', 'inventory'];
+    $product_table = null;
+    foreach ($product_tables as $table) {
+        if (in_array($table, $available_tables)) {
+            $product_table = $table;
+            break;
+        }
+    }
+    
+    if ($product_table) {
+        // Total products
+        $stmt = $pdo->query("SELECT COUNT(*) FROM $product_table");
+        $stats['total_products'] = $stmt->fetchColumn();
+        
+        // Low stock items (assuming quantity < 10 is low stock)
+        try {
+            $stmt = $pdo->query("SELECT COUNT(*) FROM $product_table WHERE quantity < 10");
+            $stats['low_stock'] = $stmt->fetchColumn();
+        } catch (Exception $e) {
+            $stats['low_stock'] = 0;
+        }
+        
+        // Products added in date range (if created_at exists)
+        try {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM $product_table WHERE DATE(created_at) BETWEEN ? AND ?");
+            $stmt->execute([$date_from, $date_to]);
+            $stats['products_added'] = $stmt->fetchColumn();
+        } catch (Exception $e) {
+            $stats['products_added'] = 0;
+        }
+    }
+    
+    // Orders stats
+    $order_tables = ['orders', 'order', 'sales'];
+    $order_table = null;
+    foreach ($order_tables as $table) {
+        if (in_array($table, $available_tables)) {
+            $order_table = $table;
+            break;
+        }
+    }
+    
+    if ($order_table) {
+        // Get table structure to understand columns
+        $stmt = $pdo->prepare("DESCRIBE $order_table");
+        $stmt->execute();
+        $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        $date_column = 'created_at';
+        if (in_array('order_date', $columns)) $date_column = 'order_date';
+        if (in_array('date', $columns)) $date_column = 'date';
+        
+        $amount_column = 'total_amount';
+        if (in_array('amount', $columns)) $amount_column = 'amount';
+        if (in_array('total', $columns)) $amount_column = 'total';
+        
+        $status_column = 'status';
+        
+        // Orders in date range
+        try {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM $order_table WHERE DATE($date_column) BETWEEN ? AND ?");
+            $stmt->execute([$date_from, $date_to]);
+            $stats['total_orders'] = $stmt->fetchColumn();
+        } catch (Exception $e) {
+            $stats['total_orders'] = 0;
+        }
+        
+        // Revenue in date range
+        try {
+            $stmt = $pdo->prepare("SELECT COALESCE(SUM($amount_column), 0) FROM $order_table WHERE DATE($date_column) BETWEEN ? AND ?");
+            $stmt->execute([$date_from, $date_to]);
+            $stats['total_revenue'] = $stmt->fetchColumn();
+        } catch (Exception $e) {
+            $stats['total_revenue'] = 0;
+        }
+        
+        // Pending orders
+        try {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM $order_table WHERE $status_column = 'PENDING'");
+            $stmt->execute();
+            $stats['pending_orders'] = $stmt->fetchColumn();
+        } catch (Exception $e) {
+            $stats['pending_orders'] = 0;
+        }
+        
+        // Completed orders in date range
+        try {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM $order_table WHERE $status_column IN ('COMPLETED', 'DELIVERED', 'INVOICE') AND DATE($date_column) BETWEEN ? AND ?");
+            $stmt->execute([$date_from, $date_to]);
+            $stats['completed_orders'] = $stmt->fetchColumn();
+        } catch (Exception $e) {
+            $stats['completed_orders'] = 0;
+        }
+        
+        // Today's revenue
+        try {
+            $stmt = $pdo->prepare("SELECT COALESCE(SUM($amount_column), 0) FROM $order_table WHERE DATE($date_column) = CURDATE()");
+            $stmt->execute();
+            $stats['today_revenue'] = $stmt->fetchColumn();
+        } catch (Exception $e) {
+            $stats['today_revenue'] = 0;
+        }
+    }
+    
+    // Customer stats
+    $customer_tables = ['customers', 'customer', 'users', 'clients'];
+    $customer_table = null;
+    foreach ($customer_tables as $table) {
+        if (in_array($table, $available_tables)) {
+            $customer_table = $table;
+            break;
+        }
+    }
+    
+    if ($customer_table) {
+        // Total customers
+        $stmt = $pdo->query("SELECT COUNT(*) FROM $customer_table");
+        $stats['total_customers'] = $stmt->fetchColumn();
+        
+        // New customers in date range
+        try {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM $customer_table WHERE DATE(created_at) BETWEEN ? AND ?");
+            $stmt->execute([$date_from, $date_to]);
+            $stats['new_customers'] = $stmt->fetchColumn();
+        } catch (Exception $e) {
+            $stats['new_customers'] = 0;
+        }
+    }
+    
+    return $stats;
+}
+
+$stats = getDynamicStats($pdo, $available_tables, $date_from, $date_to);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>Fashion Store Admin Dashboard</title>
+    <title>Shades Beauty Admin Dashboard</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
@@ -49,6 +215,73 @@
         .wrapper {
             display: flex;
             min-height: 100vh;
+        }
+
+        /* Date Range Filter Section */
+        .date-filter-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+        }
+
+        .date-filter-form {
+            display: flex;
+            align-items: end;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .date-input-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .date-input-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            opacity: 0.9;
+        }
+
+        .date-input-group input {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.375rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .date-input-group input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .current-range {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
         }
 
         /* Sidebar Styling */
@@ -344,28 +577,6 @@
             color: var(--primary-hover);
         }
 
-        /* Welcome Section */
-        .welcome-section {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            padding: 3rem 2rem;
-            border-radius: 1rem;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-
-        .welcome-section h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .welcome-section p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            margin-bottom: 0;
-        }
-
         /* Content sections */
         .content-section {
             background: var(--card-bg);
@@ -430,12 +641,13 @@
                 border-radius: 0.375rem;
             }
 
-            .welcome-section h2 {
-                font-size: 2rem;
+            .date-filter-form {
+                flex-direction: column;
+                align-items: stretch;
             }
 
-            .welcome-section {
-                padding: 2rem 1rem;
+            .date-input-group {
+                min-width: 100%;
             }
         }
 
@@ -452,7 +664,8 @@
             <div class="sidebar-header">
                 <a href="#" class="logo" onclick="showPage('dashboard')">
                     <i class="fas fa-tshirt"></i>
-                    <span>Fashion Store</span>
+                     <!-- <img src="images/logo.png" alt="Logo" style="width:100%;"> -->
+                    <span>Shades Beauty</span>
                 </a>
                 <button class="sidebar-toggle" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
@@ -520,7 +733,7 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <div>
-                        <h4 id="pageTitle">Fashion Store Dashboard</h4>
+                        <h4 id="pageTitle">Shades Beauty Dashboard</h4>
                         <small id="currentDate"></small>
                     </div>
                 </div>
@@ -550,12 +763,31 @@
             <div class="content">
                 <!-- Dashboard Page -->
                 <div class="page-content active" id="dashboard-content">
-                    <!-- <div class="welcome-section">
-                        <h2>Welcome to Fashion Store Admin!</h2>
-                        <p>Manage your fashion store with our comprehensive admin dashboard</p>
-                    </div> -->
+                    
+                    <!-- Date Range Filter -->
+                    <div class="date-filter-section">
+                        <form method="GET" class="date-filter-form">
+                            <div class="date-input-group">
+                                <label>From Date</label>
+                                <input type="date" name="date_from" value="<?php echo $date_from; ?>" required>
+                            </div>
+                            <div class="date-input-group">
+                                <label>To Date</label>
+                                <input type="date" name="date_to" value="<?php echo $date_to; ?>" required>
+                            </div>
+                            <div>
+                                <button type="submit" class="filter-btn">
+                                    <i class="fas fa-search me-2"></i>
+                                </button>
+                            </div>
+                        </form>
+                        <div class="current-range">
+                            Showing data from <strong><?php echo date('M j, Y', strtotime($date_from)); ?></strong> 
+                            to <strong><?php echo date('M j, Y', strtotime($date_to)); ?></strong>
+                        </div>
+                    </div>
 
-                    <!-- Stats Cards -->
+                    <!-- Dynamic Stats Cards -->
                     <div class="row stats-row">
                         <div class="col-lg-3 col-md-6 mb-4">
                             <div class="stats-card">
@@ -565,7 +797,7 @@
                                     </div>
                                     <a href="#" class="stats-link" onclick="showPage('inventory')">Manage</a>
                                 </div>
-                                <div class="stats-number">245</div>
+                                <div class="stats-number"><?php echo number_format($stats['total_products'] ?? 0); ?></div>
                                 <div class="stats-title">Total Products</div>
                             </div>
                         </div>
@@ -577,11 +809,11 @@
                                     </div>
                                     <a href="#" class="stats-link" onclick="showPage('customers')">View All</a>
                                 </div>
-                                <div class="stats-number">1,247</div>
+                                <div class="stats-number"><?php echo number_format($stats['total_customers'] ?? 0); ?></div>
                                 <div class="stats-title">Total Customers</div>
                             </div>
                         </div>
-                        <div class="col-lg-3 col-md-6 mb-4">
+                        <!-- <div class="col-lg-3 col-md-6 mb-4">
                             <div class="stats-card">
                                 <div class="stats-card-header">
                                     <div class="stats-icon warning">
@@ -589,10 +821,10 @@
                                     </div>
                                     <a href="#" class="stats-link" onclick="showPage('inventory')">Restock</a>
                                 </div>
-                                <div class="stats-number">8</div>
+                                <div class="stats-number"><?php echo number_format($stats['low_stock'] ?? 0); ?></div>
                                 <div class="stats-title">Low Stock Items</div>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="col-lg-3 col-md-6 mb-4">
                             <div class="stats-card">
                                 <div class="stats-card-header">
@@ -601,8 +833,8 @@
                                     </div>
                                     <a href="#" class="stats-link" onclick="showPage('orders')">Process</a>
                                 </div>
-                                <div class="stats-number">23</div>
-                                <div class="stats-title">New Orders</div>
+                                <div class="stats-number"><?php echo number_format($stats['total_orders'] ?? 0); ?></div>
+                                <div class="stats-title">Orders</div>
                             </div>
                         </div>
                         <div class="col-lg-3 col-md-6 mb-4">
@@ -612,7 +844,7 @@
                                         <i class="fas fa-clock"></i>
                                     </div>
                                 </div>
-                                <div class="stats-number">15</div>
+                                <div class="stats-number"><?php echo number_format($stats['pending_orders'] ?? 0); ?></div>
                                 <div class="stats-title">Pending Orders</div>
                             </div>
                         </div>
@@ -623,21 +855,21 @@
                                         <i class="fas fa-check-circle"></i>
                                     </div>
                                 </div>
-                                <div class="stats-number">156</div>
+                                <div class="stats-number"><?php echo number_format($stats['completed_orders'] ?? 0); ?></div>
                                 <div class="stats-title">Completed Orders</div>
                             </div>
                         </div>
-                        <div class="col-lg-3 col-md-6 mb-4">
+                        <!-- <div class="col-lg-3 col-md-6 mb-4">
                             <div class="stats-card">
                                 <div class="stats-card-header">
                                     <div class="stats-icon success">
                                         <i class="fas fa-dollar-sign"></i>
                                     </div>
                                 </div>
-                                <div class="stats-number">$2,456</div>
+                                <div class="stats-number">$<?php echo number_format($stats['today_revenue'] ?? 0, 2); ?></div>
                                 <div class="stats-title">Today's Revenue</div>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="col-lg-3 col-md-6 mb-4">
                             <div class="stats-card">
                                 <div class="stats-card-header">
@@ -645,8 +877,54 @@
                                         <i class="fas fa-chart-line"></i>
                                     </div>
                                 </div>
-                                <div class="stats-number">$48,925</div>
-                                <div class="stats-title">Monthly Revenue</div>
+                                <div class="stats-number">Rwf<?php echo number_format($stats['total_revenue'] ?? 0, 2); ?></div>
+                                <div class="stats-title">Revenue</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Insights Row -->
+                    <div class="row">
+                        <div class="col-lg-6 mb-4">
+                            <div class="content-section">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-chart-bar me-2 text-primary"></i>
+                                    Quick Insights
+                                </h5>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="text-center p-3">
+                                            <div class="stats-number text-info" style="font-size: 1.5rem;">
+                                                <?php echo number_format($stats['new_customers'] ?? 0); ?>
+                                            </div>
+                                            <div class="stats-title">New Customers</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-center p-3">
+                                            <div class="stats-number text-success" style="font-size: 1.5rem;">
+                                                <?php echo number_format($stats['products_added'] ?? 0); ?>
+                                            </div>
+                                            <div class="stats-title">Products Added</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 mb-4">
+                            <div class="content-section">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-database me-2 text-primary"></i>
+                                    Available Tables
+                                </h5>
+                                <div class="table-badges">
+                                    <?php foreach ($available_tables as $table): ?>
+                                    <span class="badge bg-light text-dark me-1 mb-1"><?php echo $table; ?></span>
+                                    <?php endforeach; ?>
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    Dashboard automatically detects and uses available database tables
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -764,12 +1042,20 @@
 
         // Update URL without page reload
         function updateURL(pageName) {
-            const newUrl = pageName === 'dashboard' ?
-                window.location.pathname :
-                `${window.location.pathname}?page=${pageName}`;
-            window.history.pushState({
-                page: pageName
-            }, '', newUrl);
+            // Preserve date filter parameters when changing pages
+            const urlParams = new URLSearchParams(window.location.search);
+            if (pageName === 'dashboard') {
+                // Keep date filters for dashboard
+                const params = [];
+                if (urlParams.get('date_from')) params.push(`date_from=${urlParams.get('date_from')}`);
+                if (urlParams.get('date_to')) params.push(`date_to=${urlParams.get('date_to')}`);
+                const queryString = params.length > 0 ? '?' + params.join('&') : '';
+                const newUrl = window.location.pathname + queryString;
+                window.history.pushState({ page: pageName }, '', newUrl);
+            } else {
+                urlParams.set('page', pageName);
+                window.history.pushState({ page: pageName }, '', '?' + urlParams.toString());
+            }
         }
 
         function loadPageContent(pageName, phpFileName = null) {
@@ -834,7 +1120,7 @@
                     // Restore previous state
                     restorePageState(pageName);
 
-                    // Re-initialize scripts - FIXED VERSION
+                    // Re-initialize scripts
                     const scripts = doc.querySelectorAll('script');
                     scripts.forEach((script, index) => {
                         // Skip common libraries to avoid conflicts
@@ -892,123 +1178,6 @@
                     contentDiv.innerHTML = errorHTML;
                 });
         }
-        // Load page content with CSS support
-        // function loadPageContent(pageName, phpFileName = null) {
-        //     const contentDiv = document.getElementById(`${pageName}-dynamic-content`);
-        //     if (!contentDiv) return;
-
-        //     const fileName = phpFileName || `${pageName}.php`;
-
-        //     // If we have cached content, restore it
-        //     if (contentCache[pageName]) {
-        //         contentDiv.innerHTML = contentCache[pageName];
-        //         restorePageState(pageName);
-        //         initializePageListeners(pageName);
-        //         return;
-        //     }
-
-        //     // Show loading
-        //     const loadingHTML = `
-        //         <div class="text-center p-5">
-        //             <div class="loading-spinner mb-3"></div>
-        //             <h5 class="text-muted">Loading ${pageName.charAt(0).toUpperCase() + pageName.slice(1)} Management</h5>
-        //             <p class="text-muted">Please wait while we fetch your ${pageName} data...</p>
-        //         </div>
-        //     `;
-
-        //     contentDiv.innerHTML = loadingHTML;
-
-        //     // Fetch content
-        //     fetch(fileName)
-        //         .then(response => {
-        //             if (!response.ok) {
-        //                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        //             }
-        //             return response.text();
-        //         })
-        //         .then(html => {
-        //             // Parse the HTML
-        //             const parser = new DOMParser();
-        //             const doc = parser.parseFromString(html, 'text/html');
-
-        //             // Extract and inject CSS styles
-        //             const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
-        //             styles.forEach(styleElement => {
-        //                 // Check if this style/link is already added
-        //                 const existingStyle = document.head.querySelector(`[data-loaded-from="${fileName}"]`);
-        //                 if (!existingStyle || styleElement.tagName === 'LINK') {
-        //                     const newStyleElement = styleElement.cloneNode(true);
-        //                     newStyleElement.setAttribute('data-loaded-from', fileName);
-        //                     document.head.appendChild(newStyleElement);
-        //                 }
-        //             });
-
-        //             // Extract body content
-        //             const bodyContent = doc.body.innerHTML;
-
-        //             // Cache the content
-        //             contentCache[pageName] = bodyContent;
-        //             contentDiv.innerHTML = bodyContent;
-
-        //             // Initialize event listeners
-        //             initializePageListeners(pageName);
-
-        //             // Restore previous state
-        //             restorePageState(pageName);
-
-        //             // Re-initialize scripts (avoid duplicates)
-        //             const scripts = doc.querySelectorAll('script');
-        //             scripts.forEach(script => {
-        //                 // Skip common libraries to avoid conflicts
-        //                 if (script.src && (
-        //                     script.src.includes('bootstrap') || 
-        //                     script.src.includes('jquery') ||
-        //                     script.src.includes('cdnjs.cloudflare.com')
-        //                 )) {
-        //                     return;
-        //                 }
-
-        //                 const existingScript = document.head.querySelector(`[data-loaded-from="${fileName}"][data-script-content="${script.textContent}"]`);
-
-        //                 if (!existingScript) {
-        //                     const newScript = document.createElement('script');
-        //                     if (script.src) {
-        //                         newScript.src = script.src;
-        //                     } else {
-        //                         newScript.textContent = script.textContent;
-        //                         newScript.setAttribute('data-script-content', script.textContent);
-        //                     }
-        //                     newScript.setAttribute('data-loaded-from', fileName);
-        //                     document.head.appendChild(newScript);
-        //                 }
-        //             });
-        //         })
-        //         .catch(error => {
-        //             console.error(`Error loading ${pageName}:`, error);
-        //             const errorHTML = `
-        //                 <div class="text-center p-5">
-        //                     <div class="alert alert-danger d-inline-block" role="alert">
-        //                         <div class="text-center mb-3">
-        //                             <i class="fas fa-exclamation-triangle fs-1 text-danger"></i>
-        //                         </div>
-        //                         <h5 class="text-center">Unable to Load ${pageName.charAt(0).toUpperCase() + pageName.slice(1)}</h5>
-        //                         <hr>
-        //                         <p><strong>Error:</strong> ${error.message}</p>
-        //                         <p><strong>Possible Solutions:</strong></p>
-        //                         <ul class="text-start">
-        //                             <li>Ensure '${fileName}' file exists in the same directory</li>
-        //                             <li>Check file permissions and server configuration</li>
-        //                             <li>Verify database connection</li>
-        //                         </ul>
-        //                         <button class="btn btn-outline-danger btn-sm mt-2" onclick="loadPageContent('${pageName}', '${fileName}')">
-        //                             <i class="fas fa-redo me-2"></i>Try Again
-        //                         </button>
-        //                     </div>
-        //                 </div>
-        //             `;
-        //             contentDiv.innerHTML = errorHTML;
-        //         });
-        // }
 
         // Initialize page listeners
         function initializePageListeners(pageName) {
@@ -1047,7 +1216,7 @@
             }
 
             const pageTitles = {
-                'dashboard': 'Fashion Store Dashboard',
+                'dashboard': 'Shades Beauty Dashboard',
                 'inventory': 'Inventory Management',
                 'orders': 'Orders Management',
                 'customers': 'Customer Management',
@@ -1057,14 +1226,11 @@
                 'reports': 'Sales Reports'
             };
 
-            document.getElementById('pageTitle').textContent = pageTitles[pageName] || 'Fashion Store Admin';
+            document.getElementById('pageTitle').textContent = pageTitles[pageName] || 'Shades Beauty Admin';
 
             const pagesWithDynamicContent = ['inventory', 'orders', 'customers', 'enquiries', 'reviews', 'coupons', 'reports'];
 
             if (pagesWithDynamicContent.includes(pageName)) {
-                // if (pageName === 'inventory') {
-                //     loadPageContent('inventory', 'product.php');
-                // } 
                 if (pageName === 'inventory') {
                     loadPageContent('inventory', 'product_content.php');
                 } else {
@@ -1260,8 +1426,9 @@
             }
         });
 
-        console.log('Dashboard initialized successfully');
-        console.log('Keyboard shortcuts: Ctrl+Shift+D/I/O/C, Ctrl+B');
+        console.log('Dynamic Dashboard initialized successfully');
+        console.log('Available tables: <?php echo json_encode($available_tables); ?>');
+        console.log('Date range: <?php echo $date_from; ?> to <?php echo $date_to; ?>');
     </script>
 </body>
 
