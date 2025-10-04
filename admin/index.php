@@ -1,16 +1,16 @@
 <?php
 // Database configuration
-$host = 'localhost';
-$dbname = 'agmsdb';
-$username = 'root';
-$password = 'yego';
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
-}
+// $host = 'localhost';
+// $dbname = 'agmsdb';
+// $username = 'root';
+// $password = 'yego';
+include __DIR__ . '/db.php';
+// try {
+//     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+//     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+// } catch(PDOException $e) {
+//     die("Connection failed: " . $e->getMessage());
+// }
 
 // Get current page from URL
 $current_page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
@@ -61,15 +61,15 @@ function getDynamicStats($pdo, $available_tables, $date_from, $date_to) {
                 $stmt->execute([$date_from, $date_to]);
                 $stats['total_orders'] = $stmt->fetchColumn();
                 
-                $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE status='PENDING' AND DATE(created_at) BETWEEN ? AND ?");
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE status='awaiting processing' AND DATE(created_at) BETWEEN ? AND ?");
                 $stmt->execute([$date_from, $date_to]);
                 $stats['pending_orders'] = $stmt->fetchColumn();
                 
-                $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE status IN ('COMPLETED','DELIVERED','INVOICE') AND DATE(created_at) BETWEEN ? AND ?");
+                $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE status IN ('COMPLETED','DELIVERED','INVOICE','Delivered') AND DATE(created_at) BETWEEN ? AND ?");
                 $stmt->execute([$date_from, $date_to]);
                 $stats['completed_orders'] = $stmt->fetchColumn();
                 
-                $stmt = $pdo->prepare("SELECT COALESCE(SUM(total_amount), 0) FROM $table WHERE DATE(created_at) BETWEEN ? AND ?");
+                $stmt = $pdo->prepare("SELECT COALESCE(SUM(total_amount), 0) FROM $table WHERE status='DELIVERED' AND  DATE(created_at) BETWEEN ? AND ?");
                 $stmt->execute([$date_from, $date_to]);
                 $stats['total_revenue'] = $stmt->fetchColumn();
             } catch (Exception $e) {
@@ -653,7 +653,8 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
                         </form>
                         <div class="current-range">
                             <i class="fas fa-info-circle me-2"></i>
-                            <!-- Showing data from <strong><?php //echo date('M j, Y', strtotime($date_from)); ?></strong> to <strong><?php //echo date('M j, Y', strtotime($date_to)); ?></strong> -->
+                            <!-- Showing data from <strong><?php //echo date('M j, Y', strtotime($date_from)); ?></strong> to 
+                             <strong><?php //echo date('M j, Y', strtotime($date_to)); ?></strong> -->
                             <?php //if(!$filter_applied): ?>
                             <!-- <span style="color: #6366f1; font-weight: 600;"> (Default: Current Month)</span> -->
                             <?php //endif; ?>

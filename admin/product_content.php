@@ -138,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_category'])) {
 
         if ($count > 0) {
             // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode("Category already exists!"));
-            header("Location: index_1.php?page=inventory&success=category");
+            header("Location: index.php?page=inventory&success=category");
             exit();
         } else {
             $stmt = $conn->prepare("INSERT INTO categories (category_name, status, description, category_image) VALUES (?, ?, ?, ?)");
@@ -146,19 +146,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_category'])) {
             if ($stmt->execute()) {
                 $stmt->close();
                 // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&success=category");
-                header("Location: index_1.php?page=inventory&success=category");
+                header("Location: index.php?page=inventory&success=category");
                 exit();
             } else {
                 $stmt->close();
                 // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode("Database error occurred"));
-                header("Location: index_1.php?page=inventory&error=" . urlencode("Database error occurred"));
+                header("Location: index.php?page=inventory&error=" . urlencode("Database error occurred"));
                 exit();
             }
         }
     } else {
         $errorMessage = implode(", ", $errors);
         // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode($errorMessage));
-        header("Location: index_1.php?page=inventory&error=" . urlencode($errorMessage));
+        header("Location: index.php?page=inventory&error=" . urlencode($errorMessage));
         exit();
     }
 }
@@ -189,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product'])) {
 
         if ($count > 0) {
             // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode("SKU already exists!"));
-            header("Location: index_1.php?page=inventory&error=" . urlencode("SKU already exists!"));
+            header("Location: index.php?page=inventory&error=" . urlencode("SKU already exists!"));
             exit();
         } else {
             $product_name   = $_POST['product_name'];
@@ -230,19 +230,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product'])) {
             if ($stmt->execute()) {
                 $stmt->close();
                 // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&success=product");
-                header("Location: index_1.php?page=inventory&success=product");
+                header("Location: index.php?page=inventory&success=product");
                 exit();
             } else {
                 $stmt->close();
                 // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode("Database error occurred"));
-                header("Location: index_1.php?page=inventory&error=" . urlencode("Database error occurred"));
+                header("Location: index.php?page=inventory&error=" . urlencode("Database error occurred"));
                 exit();
             }
         }
     } else {
         $errorMessage = implode(", ", $errors);
         // header("Location: " . $_SERVER['PHP_SELF'] . "?page=inventory&error=" . urlencode($errorMessage));
-        header("Location: index_1.php?page=inventory&error=" . urlencode($errorMessage));
+        header("Location: index.php?page=inventory&error=" . urlencode($errorMessage));
         exit();
     }
 }
@@ -260,7 +260,7 @@ $display_products = [];
 $res = $conn->query("SELECT * FROM products ORDER BY created_at DESC");
 if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
 ?>
-
+<head>
 <style>
     /* Complete styling for inventory management within dashboard */
     .inventory-container {
@@ -777,7 +777,15 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
         }
     }
 </style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+</head>
 <div class="inventory-container">
     <?php if (!empty($message)): ?>
         <div class="alert <?= $message_type === 'success' ? 'alert-success' : 'alert-danger' ?>" id="alertMessage">
@@ -817,7 +825,7 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
                 <div class="search-section">
                     <div class="row">
                         <div class="col-md-8">
-                            <input type="text" class="form-control" placeholder="Search categories..." id="categorySearch">
+                            <!-- <input type="text" class="form-control" placeholder="Search categories..." id="categorySearch"> -->
                         </div>
                         <div class="col-md-4">
                             <select class="form-select" id="categoryFilter">
@@ -831,7 +839,7 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
 
                 <!-- Categories Table -->
                 <div class="table-container">
-                    <table class="table">
+                    <table class="table" id="categoryTable">
                         <thead>
                             <tr>
                                 <th>Image</th>
@@ -894,7 +902,7 @@ if ($res) { while ($row = $res->fetch_assoc()) { $display_products[] = $row; } }
 
                 <!-- Products Table -->
                 <div class="table-container">
-                    <table class="table">
+                    <table class="table" id="productTable">
                         <thead>
                             <tr>
                                 <th>Image</th>
@@ -1458,5 +1466,20 @@ function deleteProduct(id) {
         alert('Delete product functionality to be implemented. ID: ' + id); 
     }
 }
-
+  $(document).ready(function() {
+            $('#productTable').DataTable({
+                pageLength: 10, // number of rows per page
+                lengthMenu: [5, 10, 25, 50, 100], // dropdown options
+                ordering: true, // enable sorting
+                searching: true // enable search box
+            });
+        });
+          $(document).ready(function() {
+            $('#categoryTable').DataTable({
+                pageLength: 10, // number of rows per page
+                lengthMenu: [5, 10, 25, 50, 100], // dropdown options
+                ordering: true, // enable sorting
+                searching: true // enable search box
+            });
+        });
 </script>

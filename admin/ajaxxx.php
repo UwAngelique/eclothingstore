@@ -2,26 +2,42 @@
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-
+// include __DIR__ . '/db_connect.php';
 include 'db_connect.php';
 
+// Include PHPMailer (you need to install it first)
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+require 'vendor/autoload.php'; // If using Composer
+// OR if you downloaded PHPMailer manually:
+// require 'path/to/PHPMailer/src/Exception.php';
+// require 'path/to/PHPMailer/src/PHPMailer.php';
+// require 'path/to/PHPMailer/src/SMTP.php';
+// require 'PHPMailer/src/Exception.php';
+// require 'PHPMailer/src/PHPMailer.php';
+// require 'PHPMailer/src/SMTP.php';
+// require __DIR__ . '/../PHPMailer/src/Exception.php';
+// require __DIR__ . '/../PHPMailer/src/PHPMailer.php';
+// require __DIR__ . '/../PHPMailer/src/SMTP.php';
+
 require __DIR__ . '/../vendor/autoload.php';
+
+
+
 
 $action = $_GET['action'] ?? '';
 
-switch ($action) {
-
+switch($action) {
+    
     case 'update_payment_status':
         $id = (int)($_POST['id'] ?? 0);
         $payment_status = trim($_POST['payment_status'] ?? '');
-
+        
         if ($id && $payment_status) {
             $stmt = $conn->prepare("UPDATE orders SET payment_status = ? WHERE id = ?");
             $stmt->bind_param('si', $payment_status, $id);
-
+            
             if ($stmt->execute()) {
                 sendStatusEmail($conn, $id, 'payment', $payment_status);
                 echo '1';
@@ -37,39 +53,12 @@ switch ($action) {
     case 'update_order_status':
         $id = (int)($_POST['id'] ?? 0);
         $status = trim($_POST['status'] ?? '');
-
+        
         if ($id && $status) {
-            // CHECK IF PAYMENT STATUS IS PAID
-            $checkStmt = $conn->prepare("SELECT payment_status, status FROM orders WHERE id = ?");
-            $checkStmt->bind_param('i', $id);
-            $checkStmt->execute();
-            $result = $checkStmt->get_result();
-            $order = $result->fetch_assoc();
-            $checkStmt->close();
-
-            if (!$order) {
-                echo 'Order not found';
-                break;
-            }
-
-            // Only allow status update if payment is paid
-            if (strtolower($order['payment_status']) !== 'paid') {
-                echo 'Cannot update order status. Payment must be marked as PAID first.';
-                break;
-            }
-
-            $oldStatus = $order['status'];
-
-            // Update order status
             $stmt = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
             $stmt->bind_param('si', $status, $id);
-
+            
             if ($stmt->execute()) {
-                // Deduct inventory if status changed to "ready for pickup"
-                if (strtolower($status) === 'ready for pickup' && strtolower($oldStatus) !== 'ready for pickup') {
-                    deductInventory($conn, $id);
-                }
-
                 sendStatusEmail($conn, $id, 'order', $status);
                 echo '1';
             } else {
@@ -80,7 +69,7 @@ switch ($action) {
             echo 'Invalid parameters';
         }
         break;
-
+    
     case 'view_order':
         $id = (int)($_POST['id'] ?? 0);
         if ($id) {
@@ -90,7 +79,7 @@ switch ($action) {
             $result = $stmt->get_result();
             $order = $result->fetch_assoc();
             $stmt->close();
-
+            
             if ($order) {
                 $stmt2 = $conn->prepare("SELECT * FROM order_items WHERE order_id = ?");
                 $stmt2->bind_param('i', $id);
@@ -98,7 +87,7 @@ switch ($action) {
                 $items_result = $stmt2->get_result();
                 $items = $items_result->fetch_all(MYSQLI_ASSOC);
                 $stmt2->close();
-
+                
                 echo "<h3>Order Details: " . htmlspecialchars($order['order_number']) . "</h3>";
                 echo "<table style='width:100%; margin-top:20px;'>";
                 echo "<tr><td style='width:40%;'><strong>Customer Name:</strong></td><td>" . htmlspecialchars($order['customer_name']) . "</td></tr>";
@@ -110,7 +99,7 @@ switch ($action) {
                 echo "<tr><td><strong>Total Amount:</strong></td><td><strong>RWF " . number_format($order['total_amount'], 2) . "</strong></td></tr>";
                 echo "<tr><td><strong>Order Date:</strong></td><td>" . htmlspecialchars($order['created_at']) . "</td></tr>";
                 echo "</table>";
-
+                
                 if ($items) {
                     echo "<h4 style='margin-top:30px;'>Order Items:</h4>";
                     echo "<table style='width:100%;'>";
@@ -132,113 +121,20 @@ switch ($action) {
             }
         }
         break;
-
+    
     default:
         echo 'Invalid action';
 }
 
-// Function to deduct inventory when order is ready for pickup
-// function deductInventory($conn, $orderId) {
-//     // Get all items from this order
-//     $stmt = $conn->prepare("SELECT product_id, quantity FROM order_items WHERE order_id = ?");
-//     $stmt->bind_param('i', $orderId);
-//     $stmt->execute();
-//     $result = $stmt->get_result();
-//     $items = $result->fetch_all(MYSQLI_ASSOC);
-//     $stmt->close();
-
-//     // Deduct each product's quantity
-//     foreach ($items as $item) {
-//         $productId = $item['product_id'];
-//         $quantity = $item['quantity'];
-
-//         // Update product quantity in products table
-//         $updateStmt = $conn->prepare("UPDATE products SET quantity = quantity - ? WHERE id = ?");
-//         $updateStmt->bind_param('ii', $quantity, $productId);
-//         $updateStmt->execute();
-//         $updateStmt->close();
-
-//         error_log("Deducted $quantity units from product ID $productId for order ID $orderId");
-//     }
-
-//     return true;
-// }
-function deductInventory($conn, $orderId)
-{
-    // Get all items from this order
-    $stmt = $conn->prepare("SELECT product_id, quantity FROM order_items WHERE order_id = ?");
-    $stmt->bind_param('i', $orderId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $items = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-
-    // echo "<pre>Order ID: $orderId\nFetched items:\n";
-    // print_r($items);
-    // echo "</pre>";
-
-    foreach ($items as $item) {
-        $productId = $item['product_id'];
-        $orderedQty = $item['quantity'];
-        $currentQty = null; 
-        // Step 1️⃣: Retrieve current quantity safely
-        $selectStmt = $conn->prepare("SELECT quantity FROM products WHERE id = ?");
-        $selectStmt->bind_param('i', $productId);
-        $selectStmt->execute();
-        $selectStmt->bind_result($currentQty);
-        $found = $selectStmt->fetch();
-        $selectStmt->close();
-
-        if (!$found) {
-            // echo "<pre>⚠️ Product ID $productId not found in products table! Skipping...</pre>";
-            // error_log("Product ID $productId not found in products table for order $orderId");
-            continue; // Skip this product
-        }
-
-        // Step 2️⃣: Calculate the new quantity
-        $newQty = $currentQty - $orderedQty;
-
-        // echo "<pre>Product ID: $productId\n";
-        // echo "Current Qty: $currentQty\n";
-        // echo "Ordered Qty: $orderedQty\n";
-        // echo "New Qty: $newQty</pre>";
-
-        // Step 3️⃣: Prevent negative stock
-        if ($newQty < 0) {
-            // echo "<pre>❌ Cannot deduct $orderedQty from Product $productId — not enough stock (current: $currentQty)</pre>";
-            // error_log("Stock deduction skipped for Product $productId due to insufficient quantity.");
-            continue;
-        }
-
-        // Step 4️⃣: Update with the new calculated quantity
-        $updateStmt = $conn->prepare("UPDATE products SET quantity = ? WHERE id = ?");
-        $updateStmt->bind_param('ii', $newQty, $productId);
-        $updateStmt->execute();
-
-        if ($updateStmt->error) {
-            // echo "<pre>SQL Error updating product $productId: " . $updateStmt->error . "</pre>";
-        } else {
-            // echo "<pre>✅ Updated product $productId successfully!</pre>";
-        }
-
-        $updateStmt->close();
-
-        // Log it for records
-        // error_log("Deducted $orderedQty units from product ID $productId (was $currentQty, now $newQty) for order ID $orderId");
-    }
-
-    // echo "<pre>✔️ Inventory deduction completed successfully for order $orderId</pre>";
-    return true;
-}
-
-function sendStatusEmail($conn, $orderId, $type, $newStatus)
-{
+function sendStatusEmail($conn, $orderId, $type, $newStatus) {
+    // Gmail SMTP Credentials
     $credentials = [
         "ishyigasoftware216@gmail.com",
         "amdozspatqhnqnsl"
     ];
     $host = "smtp.gmail.com";
-
+    
+    // Get order details from database
     $stmt = $conn->prepare("
         SELECT 
             order_number, 
@@ -255,18 +151,18 @@ function sendStatusEmail($conn, $orderId, $type, $newStatus)
     $result = $stmt->get_result();
     $order = $result->fetch_assoc();
     $stmt->close();
-
+    
     if (!$order || !$order['customer_email']) {
         error_log("Email not sent: No customer_email found for order ID $orderId");
         return false;
     }
-
+    
     $to = $order['customer_email'];
     $customerName = htmlspecialchars($order['customer_name']);
     $orderNumber = htmlspecialchars($order['order_number']);
     $statusLabel = ucwords($newStatus);
     $totalAmount = 'RWF ' . number_format($order['total_amount'], 2);
-
+    
     if ($type === 'payment') {
         $subject = "Payment Status Update - Order $orderNumber";
         $statusType = "Payment Status";
@@ -274,7 +170,7 @@ function sendStatusEmail($conn, $orderId, $type, $newStatus)
         $subject = "Order Status Update - Order $orderNumber";
         $statusType = "Order Status";
     }
-
+    
     $message = "
     <!DOCTYPE html>
     <html>
@@ -411,18 +307,20 @@ function sendStatusEmail($conn, $orderId, $type, $newStatus)
                 <p class='message-text'>Thank you for choosing us! If you have any questions about your order, please don't hesitate to contact our customer support team.</p>
             </div>
             <div class='footer'>
-                <p class='company-name'>Shades Beauty</p>
+                <p class='company-name'>Shade Beauty</p>
                 <p>This is an automated notification email.</p>
-                <p style='font-size:12px; color:#9ca3af;'>© 2025 Shades Beauty. All rights reserved.</p>
+                <p style='font-size:12px; color:#9ca3af;'>© 2025 Your Store. All rights reserved.</p>
             </div>
         </div>
     </body>
     </html>
     ";
-
+    
+    // Send email using PHPMailer with Gmail SMTP
     $mail = new PHPMailer(true);
-
+    
     try {
+        // Server settings
         $mail->isSMTP();
         $mail->Host       = $host;
         $mail->SMTPAuth   = true;
@@ -430,14 +328,16 @@ function sendStatusEmail($conn, $orderId, $type, $newStatus)
         $mail->Password   = $credentials[1];
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
-
-        $mail->setFrom($credentials[0], 'Shades Beauty');
+        
+        // Recipients
+        $mail->setFrom($credentials[0], 'Shade Beauty');
         $mail->addAddress($to, $customerName);
-
+        
+        // Content
         $mail->isHTML(true);
         $mail->Subject = $subject;
         $mail->Body    = $message;
-
+        
         $mail->send();
         error_log("Email sent successfully to $to for order $orderNumber");
         return true;
@@ -446,3 +346,4 @@ function sendStatusEmail($conn, $orderId, $type, $newStatus)
         return false;
     }
 }
+?>
