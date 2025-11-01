@@ -1,10 +1,20 @@
 <?php
-// discount_promotion_content.php - Complete Working Version
+// discount_promotion_content.php - RWF Currency Version
+// Headers-safe version - uses JavaScript redirects only
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 include 'db_connect.php';
 include 'discount_functions.php';
+
+// Helper function for safe redirects - JavaScript only (no headers)
+function safe_redirect($url) {
+    // Always use JavaScript redirect since headers are already sent by index.php
+    echo '<script type="text/javascript">window.location.href="' . htmlspecialchars($url, ENT_QUOTES) . '";</script>';
+    echo '<noscript><meta http-equiv="refresh" content="0;url=' . htmlspecialchars($url, ENT_QUOTES) . '" /></noscript>';
+    exit();
+}
 
 $message = '';
 $message_type = '';
@@ -64,16 +74,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product_discount
         
         if ($stmt->execute()) {
             $stmt->close();
-            header("Location: index.php?page=discounts&success=discount");
-            exit();
+            safe_redirect("index.php?page=discount&success=discount");
         } else {
             $stmt->close();
-            header("Location: index.php?page=discounts&error=" . urlencode("Database error occurred"));
-            exit();
+            safe_redirect("index.php?page=discount&error=" . urlencode("Database error occurred"));
         }
     } else {
-        header("Location: index.php?page=discounts&error=" . urlencode(implode(", ", $errors)));
-        exit();
+        safe_redirect("index.php?page=discount&error=" . urlencode(implode(", ", $errors)));
     }
 }
 
@@ -118,11 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_bulk_discount'])
             }
         }
         
-        header("Location: index.php?page=discounts&success=discount&count=" . $successCount);
-        exit();
+        safe_redirect("index.php?page=discount&success=discount&count=" . $successCount);
     } else {
-        header("Location: index.php?page=discounts&error=" . urlencode(implode(", ", $errors)));
-        exit();
+        safe_redirect("index.php?page=discount&error=" . urlencode(implode(", ", $errors)));
     }
 }
 
@@ -154,16 +159,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_category_discoun
         if ($stmt->execute()) {
             $affectedRows = $stmt->affected_rows;
             $stmt->close();
-            header("Location: index.php?page=discounts&success=discount&count=" . $affectedRows);
-            exit();
+            safe_redirect("index.php?page=discount&success=discount&count=" . $affectedRows);
         } else {
             $stmt->close();
-            header("Location: index.php?page=discounts&error=" . urlencode("Database error occurred"));
-            exit();
+            safe_redirect("index.php?page=discount&error=" . urlencode("Database error occurred"));
         }
     } else {
-        header("Location: index.php?page=discounts&error=" . urlencode(implode(", ", $errors)));
-        exit();
+        safe_redirect("index.php?page=discount&error=" . urlencode(implode(", ", $errors)));
     }
 }
 
@@ -205,11 +207,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_copy_discount'])
             }
         }
         
-        header("Location: index.php?page=discounts&success=discount&count=" . $successCount);
-        exit();
+        safe_redirect("index.php?page=discount&success=discount&count=" . $successCount);
     } else {
-        header("Location: index.php?page=discounts&error=" . urlencode(implode(", ", $errors)));
-        exit();
+        safe_redirect("index.php?page=discount&error=" . urlencode(implode(", ", $errors)));
     }
 }
 
@@ -219,8 +219,7 @@ if (isset($_GET['clear_all_discounts']) && $_GET['clear_all_discounts'] === 'con
     $stmt->execute();
     $affectedRows = $stmt->affected_rows;
     $stmt->close();
-    header("Location: index.php?page=discounts&success=discount_deleted&count=" . $affectedRows);
-    exit();
+    safe_redirect("index.php?page=discount&success=discount_deleted&count=" . $affectedRows);
 }
 
 // Handle Promotion Form Submission
@@ -280,16 +279,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_promotion'])) {
                 }
             }
             
-            header("Location: index.php?page=discounts&success=promotion");
-            exit();
+            safe_redirect("index.php?page=discount&success=promotion");
         } else {
             $stmt->close();
-            header("Location: index.php?page=discounts&error=" . urlencode("Database error occurred"));
-            exit();
+            safe_redirect("index.php?page=discount&error=" . urlencode("Database error occurred"));
         }
     } else {
-        header("Location: index.php?page=discounts&error=" . urlencode(implode(", ", $errors)));
-        exit();
+        safe_redirect("index.php?page=discount&error=" . urlencode(implode(", ", $errors)));
     }
 }
 
@@ -300,8 +296,30 @@ if (isset($_GET['remove_discount'])) {
     $stmt->bind_param("i", $productId);
     $stmt->execute();
     $stmt->close();
-    header("Location: index.php?page=discounts&success=discount_deleted");
-    exit();
+    safe_redirect("index.php?page=discount&success=discount_deleted");
+}
+
+// Handle Activate Product Discount
+if (isset($_GET['activate_discount'])) {
+    $productId = (int)$_GET['activate_discount'];
+    $now = date('Y-m-d H:i:s');
+    $futureDate = date('Y-m-d H:i:s', strtotime('+1 year'));
+    $stmt = $conn->prepare("UPDATE products SET discount_start_date = ?, discount_end_date = ? WHERE id = ?");
+    $stmt->bind_param("ssi", $now, $futureDate, $productId);
+    $stmt->execute();
+    $stmt->close();
+    safe_redirect("index.php?page=discount&success=discount_updated");
+}
+
+// Handle Deactivate Product Discount
+if (isset($_GET['deactivate_discount'])) {
+    $productId = (int)$_GET['deactivate_discount'];
+    $pastDate = date('Y-m-d H:i:s', strtotime('-1 day'));
+    $stmt = $conn->prepare("UPDATE products SET discount_end_date = ? WHERE id = ?");
+    $stmt->bind_param("si", $pastDate, $productId);
+    $stmt->execute();
+    $stmt->close();
+    safe_redirect("index.php?page=discount&success=discount_updated");
 }
 
 // Handle Toggle Promotion Status
@@ -311,8 +329,7 @@ if (isset($_GET['toggle_promotion'])) {
     $stmt->bind_param("i", $promotionId);
     $stmt->execute();
     $stmt->close();
-    header("Location: index.php?page=discounts&success=promotion_updated");
-    exit();
+    safe_redirect("index.php?page=discount&success=promotion_updated");
 }
 
 // Handle Delete Promotion
@@ -331,8 +348,7 @@ if (isset($_GET['delete_promotion'])) {
     $stmt->execute();
     $stmt->close();
     
-    header("Location: index.php?page=discounts&success=promotion_deleted");
-    exit();
+    safe_redirect("index.php?page=discount&success=promotion_deleted");
 }
 
 // Fetch all active products for discount selection
@@ -979,24 +995,24 @@ $stats = getPromotionStatistics($conn);
     <?php endif; ?>
     
     <!-- Statistics Dashboard -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-value"><?= $stats['active_promotions'] ?></div>
+    <!-- <div class="stats-grid"> -->
+        <!-- <div class="stat-card">
+            <div class="stat-value"> $stats['active_promotions'] ?></div>
             <div class="stat-label"><i class="fas fa-tags me-2"></i>Active Promotions</div>
-        </div>
-        <div class="stat-card green">
-            <div class="stat-value"><?= $stats['products_on_sale'] ?></div>
+        </div> -->
+        <!-- <div class="stat-card green">
+            <div class="stat-value">// $stats['products_on_sale'] ?></div>
             <div class="stat-label"><i class="fas fa-percent me-2"></i>Products on Sale</div>
-        </div>
-        <div class="stat-card orange">
-            <div class="stat-value">$<?= number_format($stats['total_discount_amount'], 0) ?></div>
+        </div> -->
+        <!-- <div class="stat-card orange">
+            <div class="stat-value">RWF number_format($stats['total_discount_amount'], 0) </div>
             <div class="stat-label"><i class="fas fa-dollar-sign me-2"></i>Total Discounts Given</div>
         </div>
         <div class="stat-card blue">
-            <div class="stat-value"><?= $stats['total_uses'] ?></div>
+            <div class="stat-value">$stats['total_uses'] ?></div>
             <div class="stat-label"><i class="fas fa-chart-line me-2"></i>Total Promo Uses</div>
-        </div>
-    </div>
+        </div> -->
+    <!-- </div> -->
 
     <!-- Tabs -->
     <ul class="nav nav-tabs" id="discountTabs" role="tablist">
@@ -1122,7 +1138,7 @@ $stats = getPromotionStatistics($conn);
                                     </td>
                                     <td><?= htmlspecialchars($product['category']) ?></td>
                                     <td>
-                                        <strong>$<?= number_format($product['price'], 2) ?></strong>
+                                        <strong>RWF <?= number_format($product['price'], 0) ?></strong>
                                     </td>
                                     <td>
                                         <?php if ($hasDiscount): ?>
@@ -1133,8 +1149,8 @@ $stats = getPromotionStatistics($conn);
                                     </td>
                                     <td>
                                         <?php if ($hasDiscount): ?>
-                                            <strong class="text-success">$<?= number_format($salePrice, 2) ?></strong><br>
-                                            <small class="text-muted">Save $<?= number_format($discountAmount, 2) ?></small>
+                                            <strong class="text-success">RWF <?= number_format($salePrice, 0) ?></strong><br>
+                                            <small class="text-muted">Save RWF <?= number_format($discountAmount, 0) ?></small>
                                         <?php else: ?>
                                             <span class="text-muted">—</span>
                                         <?php endif; ?>
@@ -1158,6 +1174,15 @@ $stats = getPromotionStatistics($conn);
                                             <i class="fas fa-percent"></i>
                                         </button>
                                         <?php if ($hasDiscount): ?>
+                                            <?php if ($isActive): ?>
+                                                <button class="btn-action" style="background: #f59e0b; color: white;" onclick="deactivateDiscount(<?= $product['id'] ?>)" title="Deactivate Discount">
+                                                    <i class="fas fa-pause"></i>
+                                                </button>
+                                            <?php else: ?>
+                                                <button class="btn-action" style="background: #10b981; color: white;" onclick="activateDiscount(<?= $product['id'] ?>)" title="Activate Discount">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                            <?php endif; ?>
                                             <button class="btn-action" style="background: #3b82f6; color: white;" onclick="copyDiscount(<?= $product['id'] ?>, <?= $discountPercentage ?>, '<?= $product['discount_start_date'] ?? '' ?>', '<?= $product['discount_end_date'] ?? '' ?>')" title="Copy Discount">
                                                 <i class="fas fa-copy"></i>
                                             </button>
@@ -1229,13 +1254,21 @@ $stats = getPromotionStatistics($conn);
                                         <?= $promo['times_used'] ?><?= $promo['usage_limit'] ? ' / ' . $promo['usage_limit'] : '' ?>
                                     </td>
                                     <td>
-                                        <label class="toggle-switch">
-                                            <input type="checkbox" <?= $promo['status'] === 'active' ? 'checked' : '' ?> 
-                                                   onchange="togglePromotion(<?= $promo['id'] ?>)">
-                                            <span class="toggle-slider"></span>
-                                        </label>
+                                        <?php if ($promo['status'] === 'active'): ?>
+                                            <button class="btn-action" style="background: #10b981; color: white; padding: 0.5rem 1rem; white-space: nowrap;" 
+                                                    onclick="togglePromotion(<?= $promo['id'] ?>)" title="Click to deactivate">
+                                                <i class="fas fa-check-circle"></i> Active
+                                            </button>
+                                        <?php else: ?>
+                                            <button class="btn-action" style="background: #6b7280; color: white; padding: 0.5rem 1rem; white-space: nowrap;" 
+                                                    onclick="togglePromotion(<?= $promo['id'] ?>)" title="Click to activate">
+                                                <i class="fas fa-pause-circle"></i> Inactive
+                                            </button>
+                                        <?php endif; ?>
                                         <?php if (!$isActive && $promo['status'] === 'active'): ?>
-                                            <small class="text-muted d-block">Not in date range</small>
+                                            <small class="text-warning d-block" style="margin-top: 0.5rem;">
+                                                <i class="fas fa-exclamation-triangle"></i> Not in date range
+                                            </small>
                                         <?php endif; ?>
                                     </td>
                                     <td>
@@ -1282,16 +1315,16 @@ $stats = getPromotionStatistics($conn);
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <div>
                                     <small class="text-muted">Original Price</small>
-                                    <div><strong id="edit_original_price">RWF 0.00</strong></div>
+                                    <div><strong id="edit_original_price">RWF 0</strong></div>
                                 </div>
                                 <i class="fas fa-arrow-right text-primary"></i>
                                 <div>
                                     <small class="text-muted">Sale Price</small>
-                                    <div><strong class="text-success" id="edit_sale_price"> RWF 0.00</strong></div>
+                                    <div><strong class="text-success" id="edit_sale_price">RWF 0</strong></div>
                                 </div>
                                 <div>
                                     <small class="text-muted">Customer Saves</small>
-                                    <div><strong class="text-danger" id="edit_save_amount">RWF 0.00</strong></div>
+                                    <div><strong class="text-danger" id="edit_save_amount">RWF 0</strong></div>
                                 </div>
                             </div>
                         </div>
@@ -1575,7 +1608,7 @@ $stats = getPromotionStatistics($conn);
                                     <label class="form-label">Discount Type <span class="required">*</span></label>
                                     <select class="form-select" name="discount_type" id="discount_type" required onchange="updateDiscountFields()">
                                         <option value="percentage">Percentage Off (%)</option>
-                                        <option value="fixed_amount">Fixed Amount Off (RWF)</option>
+                                        <option value="fixed_amount">Fixed Amount Off ($)</option>
                                         <option value="bogo">Buy One Get One Free</option>
                                         <option value="free_shipping">Free Shipping</option>
                                     </select>
@@ -1598,7 +1631,7 @@ $stats = getPromotionStatistics($conn);
                                 <div class="mb-3" id="max_discount_field">
                                     <label class="form-label">Max Discount Amount (Optional)</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">RWF</span>
                                         <input type="number" class="form-control" name="max_discount_amount" step="0.01" min="0">
                                     </div>
                                     <small class="text-muted">For percentage discounts, cap the maximum discount</small>
@@ -1608,7 +1641,7 @@ $stats = getPromotionStatistics($conn);
                                 <div class="mb-3">
                                     <label class="form-label">Minimum Purchase Amount</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">$</span>
+                                        <span class="input-group-text">RWF</span>
                                         <input type="number" class="form-control" name="min_purchase_amount" step="0.01" min="0" value="0">
                                     </div>
                                     <small class="text-muted">Minimum cart total required</small>
@@ -1801,9 +1834,9 @@ function updateEditPreview() {
         const discountAmt = price * (discount / 100);
         const salePrice = price - discountAmt;
         
-        document.getElementById('edit_original_price').textContent = 'Rwf '+ price.toFixed(2);
-        document.getElementById('edit_sale_price').textContent = 'Rwf '+ salePrice.toFixed(2);
-        document.getElementById('edit_save_amount').textContent = 'Rwf '+ discountAmt.toFixed(2);
+        document.getElementById('edit_original_price').textContent = 'RWF ' + price.toFixed(0);
+        document.getElementById('edit_sale_price').textContent = 'RWF ' + salePrice.toFixed(0);
+        document.getElementById('edit_save_amount').textContent = 'RWF ' + discountAmt.toFixed(0);
         document.getElementById('edit_price_preview').style.display = 'block';
     } else {
         document.getElementById('edit_price_preview').style.display = 'none';
@@ -1864,7 +1897,7 @@ function updateCategoryProductCount() {
 function clearAllDiscounts() {
     if (confirm('Are you sure you want to remove ALL discounts from ALL products? This action cannot be undone.')) {
         if (confirm('This will affect ALL products with discounts. Click OK to proceed.')) {
-            window.location.href = 'index.php?page=discounts&clear_all_discounts=confirm';
+            window.location.href = 'index.php?page=discount&clear_all_discounts=confirm';
         }
     }
 }
@@ -1902,7 +1935,7 @@ function filterTable() {
             visibleCount++;
             if (hasDiscount) {
                 withDiscountCount++;
-                const priceText = row.cells[4]?.textContent || '$0';
+                const priceText = row.cells[4]?.textContent || 'RWF 0';
                 const price = parseFloat(priceText.replace('$', '').replace(',', ''));
                 const discountBadge = row.cells[5]?.querySelector('.discount-badge');
                 if (discountBadge) {
@@ -1923,7 +1956,7 @@ function updateDiscountStats(total, withDiscount, discountAmount) {
     
     const percentage = total > 0 ? Math.round((withDiscount / total) * 100) : 0;
     statsElement.innerHTML = '<strong>' + withDiscount + '</strong> of <strong>' + total + '</strong> products have discounts (' + percentage + '%)' +
-        (discountAmount > 0 ? ' • Est. savings: <strong>Rwf ' + discountAmount.toFixed(2) + '</strong>' : '');
+        (discountAmount > 0 ? ' • Est. savings: <strong>$' + discountAmount.toFixed(0) + '</strong>' : '');
 }
 
 // Calculate initial stats
@@ -1942,7 +1975,7 @@ function calculateInitialStats() {
         const hasDiscount = row.dataset.hasDiscount === '1';
         if (hasDiscount) {
             withDiscount++;
-            const priceText = row.cells[4]?.textContent || '$0';
+            const priceText = row.cells[4]?.textContent || 'RWF 0';
             const price = parseFloat(priceText.replace('$', '').replace(',', ''));
             const discountBadge = row.cells[5]?.querySelector('.discount-badge');
             if (discountBadge) {
@@ -2007,19 +2040,48 @@ function deselectAllCopyTargets() {
 // Remove discount
 function removeDiscount(productId) {
     if (confirm('Are you sure you want to remove this discount?')) {
-        window.location.href = 'index.php?page=discounts&remove_discount=' + productId;
+        window.location.href = 'index.php?page=discount&remove_discount=' + productId;
     }
 }
 
-// Toggle promotion
+// Activate discount
+function activateDiscount(productId) {
+    if (confirm('Activate this discount? It will be valid starting now for 1 year.')) {
+        window.location.href = 'index.php?page=discount&activate_discount=' + productId;
+    }
+}
+
+// Deactivate discount
+function deactivateDiscount(productId) {
+    if (confirm('Deactivate this discount? Customers will no longer be able to use it.')) {
+        window.location.href = 'index.php?page=discount&deactivate_discount=' + productId;
+    }
+}
+
+// Toggle promotion status
 function togglePromotion(promotionId) {
-    window.location.href = 'index.php?page=discounts&toggle_promotion=' + promotionId;
+    const button = event.target.closest('button');
+    const isActive = button.textContent.includes('Active') && !button.textContent.includes('Inactive');
+    
+    const message = isActive 
+        ? 'Are you sure you want to DEACTIVATE this promotion?' 
+        : 'Are you sure you want to ACTIVATE this promotion?';
+    
+    if (confirm(message)) {
+        // Disable button to prevent double-click
+        button.disabled = true;
+        button.style.opacity = '0.5';
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+        
+        // Redirect to toggle
+        window.location.href = 'index.php?page=discount&toggle_promotion=' + promotionId;
+    }
 }
 
 // Delete promotion
 function deletePromotion(promotionId) {
     if (confirm('Are you sure you want to delete this promotion? This cannot be undone.')) {
-        window.location.href = 'index.php?page=discounts&delete_promotion=' + promotionId;
+        window.location.href = 'index.php?page=discount&delete_promotion=' + promotionId;
     }
 }
 
@@ -2037,7 +2099,7 @@ function updateDiscountFields() {
         discountValueField.style.display = 'block';
         maxDiscountField.style.display = 'block';
     } else if (discountType === 'fixed_amount') {
-        discountPrefix.textContent = '$';
+        discountPrefix.textContent = 'RWF ';
         discountValue.removeAttribute('max');
         discountValueField.style.display = 'block';
         maxDiscountField.style.display = 'none';

@@ -1,0 +1,517 @@
+[Mon Oct  6 12:27:11 2025] PHP 8.2.8 Development Server (http://192.168.10.117:8080) started
+[Mon Oct  6 12:27:19 2025] 192.168.10.117:57579 Accepted
+[Mon Oct  6 12:27:19 2025] 192.168.10.117:57296 Accepted
+[Mon Oct  6 12:27:23 2025] 192.168.10.117:57579 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:57296 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:64977 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:49181 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:64977 [200]: GET /frontend/assets/css/bootstrap.min.css
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:57307 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:49181 [200]: GET /frontend/assets/css/font-awesome.min.css
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:52220 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:57307 [200]: GET /frontend/assets/css/owl.carousel.css
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:65516 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:52220 [200]: GET /frontend/assets/css/animate.css
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:60330 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:65516 [200]: GET /frontend/assets/css/fonts.css
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:64977 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:49181 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:54693 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:60330 [200]: GET /frontend/assets/css/color-switcher.css
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:57307 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:52652 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:54693 [200]: GET /frontend/assets/css/media.css
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:52220 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:49701 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:52652 [200]: GET /frontend/assets/css/flaticon.css
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:65516 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:52013 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:49701 [200]: GET /frontend/assets/css/style.css
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:60330 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:57181 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:52013 [200]: GET /frontend/assets/js/jquery-3.2.1.min.js
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:54693 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:60111 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:57181 [200]: GET /frontend/assets/images/pre1.gif
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:52652 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:61606 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:60111 [200]: GET /frontend/img/call_center2.png
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:49701 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:64244 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:61606 [200]: GET /frontend/assets/js/bootstrap.min.js
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:58220 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:64244 [200]: GET /frontend/assets/js/owl.carousel.min.js
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:52013 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:57181 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:61605 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:58220 [200]: GET /frontend/assets/js/countTo.js
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:60111 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:56524 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:61605 [200]: GET /frontend/assets/fonts/fontawesome-webfont.woff2?v=4.7.0
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:61606 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:50798 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:56524 [200]: GET /frontend/assets/fonts/Ubuntu-Regular.otf
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:64244 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:55539 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:50798 [200]: GET /frontend/assets/js/appear.js
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:58220 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:51991 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:55539 [200]: GET /frontend/assets/js/color-switcher.js
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:61605 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:61257 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:51991 [200]: GET /frontend/assets/js/typed.js
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:56524 Closing
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:57856 Accepted
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:61257 [200]: GET /frontend/assets/js/custom.js
+[Mon Oct  6 12:27:24 2025] 192.168.10.117:50798 Closing
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:57856 Closing
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:55539 Closing
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:51991 Closing
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:61257 Closing
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:50788 Accepted
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:50788 [200]: GET /frontend/assets/images/banner11.jpg
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:60522 Accepted
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:52633 Accepted
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:60522 [200]: GET /frontend/assets/images/banner22.jpg
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:52633 [200]: GET /frontend/assets/images/banner33.jpg
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:50788 Closing
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:60522 Closing
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:52633 Closing
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:53141 Accepted
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:60865 Accepted
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:53141 Closing
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:60865 [200]: GET /frontend/assets/fonts/Ubuntu-Bold.otf
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:50871 Accepted
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:50871 Closing
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:60865 Closing
+[Mon Oct  6 12:27:25 2025] 192.168.10.117:59419 Accepted
+[Mon Oct  6 12:27:26 2025] 192.168.10.117:59419 Closing
+[Mon Oct  6 12:27:26 2025] 192.168.10.117:59004 Accepted
+[Mon Oct  6 12:27:26 2025] 192.168.10.117:59004 Closing
+[Mon Oct  6 12:27:26 2025] 192.168.10.117:49832 Accepted
+[Mon Oct  6 12:27:26 2025] 192.168.10.117:49832 Closing
+[Mon Oct  6 12:27:29 2025] 192.168.10.117:61501 Accepted
+[Mon Oct  6 12:27:29 2025] 192.168.10.117:54206 Accepted
+[Mon Oct  6 12:27:30 2025] 192.168.10.117:61501 Closing
+[Mon Oct  6 12:27:30 2025] 192.168.10.117:54206 [200]: GET /frontend/img/logo-company.png
+[Mon Oct  6 12:27:30 2025] 192.168.10.117:54206 Closing
+[Mon Oct  6 12:27:31 2025] 192.168.10.117:65375 Accepted
+[Mon Oct  6 12:27:32 2025] 192.168.10.117:65375 Closing
+[Mon Oct  6 12:27:35 2025] 192.168.10.117:64048 Accepted
+[Mon Oct  6 12:27:35 2025] 192.168.10.117:55271 Accepted
+[Mon Oct  6 12:27:39 2025] 192.168.10.117:64048 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:55271 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:65188 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:64941 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:49667 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:52018 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:65188 [200]: GET /dashboard/assets/plugins/web-fonts/icons.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:55056 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:64941 [200]: GET /dashboard/assets/plugins/web-fonts/font-awesome/font-awesome.min.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:49667 [200]: GET /dashboard/assets/plugins/bootstrap/css/bootstrap.min.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:52018 [200]: GET /dashboard/assets/plugins/jquery/jquery.min.js
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:49334 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:55056 [200]: GET /dashboard/assets/plugins/web-fonts/plugin.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:49334 [200]: GET /frontend/assets/css/flaticon.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:64941 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:52018 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:65188 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:49667 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:55056 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:49334 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:65073 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:65073 [200]: GET /dashboard/assets/css/custom.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:57324 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:62347 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:57324 [200]: GET /dashboard/assets/css/colors/default.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:58388 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:62347 [200]: GET /dashboard/assets/css/dark-style.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:65073 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:49268 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:58388 [200]: GET /dashboard/assets/css/colors/color.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:62025 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:49268 [200]: GET /dashboard/assets/css/style/style.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:57324 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:54852 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:62025 [200]: GET /dashboard/assets/css/skins.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:54711 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:54852 [200]: GET /dashboard/assets/plugins/multipleselect/multiple-select.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:62347 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:58388 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:65044 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:54711 [200]: GET /dashboard/assets/plugins/select2/css/select2.min.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:61536 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:65044 [200]: GET /dashboard/assets/switcher/css/switcher.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:62025 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:63401 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:61536 [200]: GET /dashboard/assets/css/sidemenu/sidemenu.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:54852 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:60053 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:63401 [200]: GET /dashboard/assets/switcher/demo.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:54711 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:53117 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:60053 [200]: GET /dashboard/assets/plugins/web-fonts/cryptofont/css/cryptofont.min.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:65044 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:63887 Accepted
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:53117 [200]: GET /dashboard/assets/plugins/web-fonts/flag-icon-css/css/flag-icon.min.css
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:61536 Closing
+[Mon Oct  6 12:27:41 2025] 192.168.10.117:54475 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:63887 [200]: GET /dashboard/assets/img/loader.svg
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:49268 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:63401 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:54475 [200]: GET /frontend/img/call_centern.png
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:60053 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:53117 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:63887 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:54475 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:58668 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:58668 [200]: GET /dashboard/assets/plugins/bootstrap/js/popper.min.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:61858 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:61858 [200]: GET /dashboard/assets/plugins/bootstrap/js/bootstrap.min.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:58668 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:61858 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:61731 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:61731 [200]: GET /dashboard/assets/plugins/select2/js/select2.min.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:62892 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:62892 [200]: GET /dashboard/assets/plugins/perfect-scrollbar/perfect-scrollbar.min.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:61731 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:62892 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:51510 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:51510 [200]: GET /dashboard/assets/plugins/sidemenu/sidemenu.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:62969 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:62969 [200]: GET /dashboard/assets/plugins/sidebar/sidebar.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:51510 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:62969 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:55853 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:61118 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:55853 [200]: GET /dashboard/assets/plugins/chart.js/Chart.bundle.min.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:61118 [200]: GET /dashboard/assets/plugins/peity/jquery.peity.min.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:56457 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:56066 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:56457 [200]: GET /dashboard/assets/plugins/raphael/raphael.min.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:59755 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:56066 [200]: GET /dashboard/assets/plugins/morris.js/morris.min.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:61118 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:52643 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:59755 [200]: GET /dashboard/assets/js/sticky.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:55853 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:54139 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:52643 [200]: GET /dashboard/assets/js/circle-progress.min.js
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:56457 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:64574 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:54139 [200]: GET /dashboard/assets/plugins/web-fonts/fonts/themify/themify.woff
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:56066 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:57902 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:64574 [200]: GET /dashboard/assets/plugins/web-fonts/fonts/feather/feather-webfont.woff
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:59755 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:53736 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:57902 [200]: GET /dashboard/assets/plugins/web-fonts/font-awesome/fa-solid-900.woff2
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:52643 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:59051 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:53736 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:54139 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:50060 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:59051 [200]: GET /dashboard/assets/img/end-call.jpg
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:64574 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:57305 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:50060 [200]: GET /dashboard/assets/img/incoming.png
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:57902 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:56585 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:57305 [200]: GET /dashboard/assets/img/accept.png
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:59553 Accepted
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:56585 [200]: GET /dashboard/assets/img/pngs/work3.png
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:59051 Closing
+[Mon Oct  6 12:27:42 2025] 192.168.10.117:52539 Accepted
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:59553 Closing
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:50060 Closing
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:54201 Accepted
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:52539 [200]: GET /dashboard/assets/img/missed.png
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:57305 Closing
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:53679 Accepted
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:54201 [200]: GET /dashboard/assets/img/outgoing.jpg
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:56585 Closing
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:55902 Accepted
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:53679 [200]: GET /dashboard/assets/js/custom.js
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:61324 Accepted
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:55902 [200]: GET /dashboard/assets/switcher/js/switcher.js
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:52539 Closing
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:56246 Accepted
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:61324 [200]: GET /frontend/img/call_center2.png
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:54201 Closing
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:56246 [200]: GET /dashboard/assets/img/users/1.jpg
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:53679 Closing
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:55902 Closing
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:61324 Closing
+[Mon Oct  6 12:27:43 2025] 192.168.10.117:56246 Closing
+[Mon Oct  6 12:27:47 2025] 192.168.10.117:63239 Accepted
+[Mon Oct  6 12:27:47 2025] 192.168.10.117:51632 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:63239 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:57434 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:49178 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:62250 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:51632 [200]: GET /dashboard/assets/plugins/jquery/jquery.min.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64134 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:57434 [200]: GET /dashboard/assets/plugins/bootstrap/css/bootstrap.min.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:49178 [200]: GET /dashboard/assets/plugins/web-fonts/icons.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:62250 [200]: GET /dashboard/assets/plugins/web-fonts/font-awesome/font-awesome.min.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:57938 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64134 [200]: GET /dashboard/assets/plugins/web-fonts/plugin.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:57938 [200]: GET /frontend/assets/css/flaticon.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:51632 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:56091 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:62250 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:56091 [200]: GET /dashboard/assets/css/style/style.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:57434 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:49178 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64134 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:57938 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:51771 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60424 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:51771 [200]: GET /dashboard/assets/css/skins.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60424 [200]: GET /dashboard/assets/css/custom.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:61476 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:51771 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:62653 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60424 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:61476 [200]: GET /dashboard/assets/css/dark-style.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:62653 [200]: GET /dashboard/assets/css/colors/default.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:58491 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:61476 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:62653 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:58491 [200]: GET /dashboard/assets/css/colors/color.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:56091 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:58491 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:65344 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60004 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:65344 [200]: GET /dashboard/assets/plugins/select2/css/select2.min.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60004 [200]: GET /dashboard/assets/plugins/multipleselect/multiple-select.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:65344 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60004 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:52094 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:58099 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:52094 [200]: GET /dashboard/assets/css/sidemenu/sidemenu.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:58099 [200]: GET /dashboard/assets/switcher/css/switcher.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:52094 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:58099 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:51102 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64120 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:51102 [200]: GET /dashboard/assets/switcher/demo.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64120 [200]: GET /dashboard/assets/plugins/datatable/dataTables.bootstrap4.min.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64309 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:50829 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64309 [200]: GET /dashboard/assets/plugins/datatable/responsivebootstrap4.min.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:51102 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53143 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:50829 [200]: GET /dashboard/assets/plugins/datatable/fileexport/buttons.bootstrap4.min.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64120 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53836 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53143 [200]: GET /dashboard/assets/img/loader.svg
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60821 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53836 [200]: GET /frontend/img/call_centern.png
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64309 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:58857 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60821 [200]: GET /dashboard/assets/plugins/web-fonts/cryptofont/css/cryptofont.min.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:50829 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:58857 [200]: GET /dashboard/assets/plugins/web-fonts/flag-icon-css/css/flag-icon.min.css
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53143 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:56983 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53836 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:56983 [200]: GET /dashboard/assets/plugins/bootstrap/js/popper.min.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60821 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:58857 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:56983 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:49195 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:49195 [200]: GET /dashboard/assets/plugins/bootstrap/js/bootstrap.min.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:49195 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:56396 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:52148 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64634 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:63414 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:56396 [200]: GET /dashboard/assets/plugins/select2/js/select2.min.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:52148 [200]: GET /dashboard/assets/plugins/perfect-scrollbar/perfect-scrollbar.min.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64634 [200]: GET /dashboard/assets/plugins/sidemenu/sidemenu.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:63414 [200]: GET /dashboard/assets/plugins/sidebar/sidebar.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:56396 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:52148 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64634 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:63414 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53038 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53038 [200]: GET /dashboard/assets/plugins/chart.js/Chart.bundle.min.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53038 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:59802 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:59802 [200]: GET /dashboard/assets/plugins/peity/jquery.peity.min.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:59802 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64082 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:54710 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60434 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:54273 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64082 [200]: GET /dashboard/assets/plugins/raphael/raphael.min.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:54710 [200]: GET /dashboard/assets/plugins/morris.js/morris.min.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60434 [200]: GET /dashboard/assets/js/circle-progress.min.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:54273 [200]: GET /dashboard/assets/js/sticky.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:55988 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:64082 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53882 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:55988 [200]: GET /dashboard/assets/js/custom.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:54710 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:60434 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:54273 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53882 [200]: GET /dashboard/assets/switcher/js/switcher.js
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:55988 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:53882 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:52028 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:49667 Accepted
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:52028 [200]: GET /frontend/img/call_center2.png
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:49667 [200]: GET /dashboard/assets/img/users/1.jpg
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:52028 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:49667 Closing
+[Mon Oct  6 12:27:48 2025] 192.168.10.117:59244 Accepted
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:59244 Closing
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:60098 Accepted
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:56855 Accepted
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:60098 [200]: GET /dashboard/assets/plugins/web-fonts/fonts/feather/feather-webfont.woff
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:58147 Accepted
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:56855 [200]: GET /dashboard/assets/plugins/web-fonts/font-awesome/fa-solid-900.woff2
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:58147 [200]: GET /dashboard/assets/plugins/web-fonts/fonts/themify/themify.woff
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:60098 Closing
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:56855 Closing
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:58147 Closing
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:59007 Accepted
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:50770 Accepted
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:59007 [200]: GET /storage/recordings/call_1758994929_68d821f10c92b.aac
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:64099 Accepted
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:50770 [200]: GET /storage/recordings/call_1758994572_68d8208cbdb5d.3gp
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:51996 Accepted
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:64099 [200]: GET /storage/recordings/call_1758994587_68d8209b94ff8.3gp
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:50223 Accepted
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:51996 Closing
+[Mon Oct  6 12:27:49 2025] 192.168.10.117:57702 Accepted
+[Mon Oct  6 12:27:50 2025] 192.168.10.117:50223 Closing
+[Mon Oct  6 12:27:50 2025] 192.168.10.117:59007 Closing
+[Mon Oct  6 12:27:50 2025] 192.168.10.117:54091 Accepted
+[Mon Oct  6 12:27:50 2025] 192.168.10.117:57702 Closing
+[Mon Oct  6 12:27:50 2025] 192.168.10.117:50889 Accepted
+[Mon Oct  6 12:27:50 2025] 192.168.10.117:54091 Closing
+[Mon Oct  6 12:27:50 2025] 192.168.10.117:50651 Accepted
+[Mon Oct  6 12:27:50 2025] 192.168.10.117:50889 Closing
+[Mon Oct  6 12:27:50 2025] 192.168.10.117:50770 Closing
+[Mon Oct  6 12:27:50 2025] 192.168.10.117:50591 Accepted
+[Mon Oct  6 12:27:51 2025] 192.168.10.117:50651 Closing
+[Mon Oct  6 12:27:51 2025] 192.168.10.117:64099 Closing
+[Mon Oct  6 12:27:51 2025] 192.168.10.117:56712 Accepted
+[Mon Oct  6 12:27:51 2025] 192.168.10.117:50591 Closing
+[Mon Oct  6 12:27:51 2025] 192.168.10.117:61135 Accepted
+[Mon Oct  6 12:27:51 2025] 192.168.10.117:56712 Closing
+[Mon Oct  6 12:27:51 2025] 192.168.10.117:52759 Accepted
+[Mon Oct  6 12:27:52 2025] 192.168.10.117:61135 Closing
+[Mon Oct  6 12:27:52 2025] 192.168.10.117:56913 Accepted
+[Mon Oct  6 12:27:52 2025] 192.168.10.117:52759 [200]: GET /storage/recordings/call_1758994928_68d821f0ab809.3gp
+[Mon Oct  6 12:27:52 2025] 192.168.10.117:61989 Accepted
+[Mon Oct  6 12:27:52 2025] 192.168.10.117:56913 Closing
+[Mon Oct  6 12:27:52 2025] 192.168.10.117:61749 Accepted
+[Mon Oct  6 12:27:52 2025] 192.168.10.117:61989 Closing
+[Mon Oct  6 12:27:52 2025] 192.168.10.117:64696 Accepted
+[Mon Oct  6 12:27:53 2025] 192.168.10.117:61749 Closing
+[Mon Oct  6 12:27:53 2025] 192.168.10.117:51495 Accepted
+[Mon Oct  6 12:27:53 2025] 192.168.10.117:64696 Closing
+[Mon Oct  6 12:27:53 2025] 192.168.10.117:64280 Accepted
+[Mon Oct  6 12:27:53 2025] 192.168.10.117:51495 Closing
+[Mon Oct  6 12:27:53 2025] 192.168.10.117:53110 Accepted
+[Mon Oct  6 12:27:53 2025] 192.168.10.117:64280 Closing
+[Mon Oct  6 12:27:53 2025] 192.168.10.117:52759 Closing
+[Mon Oct  6 12:27:53 2025] 192.168.10.117:52357 Accepted
+[Mon Oct  6 12:27:53 2025] 192.168.10.117:53110 [200]: GET /storage/recordings/call_1758994572_68d8208cbdb5d.3gp
+[Mon Oct  6 12:27:53 2025] 192.168.10.117:53995 Accepted
+[Mon Oct  6 12:27:54 2025] 192.168.10.117:52357 Closing
+[Mon Oct  6 12:27:54 2025] 192.168.10.117:61111 Accepted
+[Mon Oct  6 12:27:54 2025] 192.168.10.117:53995 [200]: GET /storage/recordings/call_1758994587_68d8209b94ff8.3gp
+[Mon Oct  6 12:27:54 2025] 192.168.10.117:55411 Accepted
+[Mon Oct  6 12:27:54 2025] 192.168.10.117:61111 Closing
+[Mon Oct  6 12:27:54 2025] 192.168.10.117:54586 Accepted
+[Mon Oct  6 12:27:54 2025] 192.168.10.117:55411 Closing
+[Mon Oct  6 12:27:54 2025] 192.168.10.117:59182 Accepted
+[Mon Oct  6 12:27:55 2025] 192.168.10.117:54586 Closing
+[Mon Oct  6 12:27:55 2025] 192.168.10.117:62958 Accepted
+[Mon Oct  6 12:27:55 2025] 192.168.10.117:59182 Closing
+[Mon Oct  6 12:27:55 2025] 192.168.10.117:53110 Closing
+[Mon Oct  6 12:27:55 2025] 192.168.10.117:62447 Accepted
+[Mon Oct  6 12:27:55 2025] 192.168.10.117:62958 Closing
+[Mon Oct  6 12:27:55 2025] 192.168.10.117:58185 Accepted
+[Mon Oct  6 12:27:55 2025] 192.168.10.117:62447 Closing
+[Mon Oct  6 12:27:55 2025] 192.168.10.117:53995 Closing
+[Mon Oct  6 12:27:55 2025] 192.168.10.117:54829 Accepted
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:58185 Closing
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:54966 Accepted
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:54829 [200]: GET /storage/recordings/call_1758994929_68d821f10c92b.aac
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:58341 Accepted
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:54966 Closing
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:59859 Accepted
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:58341 Closing
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:63363 Accepted
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:59859 [200]: GET /storage/recordings/call_1758994928_68d821f0ab809.3gp
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:55444 Accepted
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:63363 [200]: GET /storage/recordings/call_1758994929_68d821f10c92b.aac
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:58180 Accepted
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:55444 Closing
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:54829 Closing
+[Mon Oct  6 12:27:56 2025] 192.168.10.117:64480 Accepted
+[Mon Oct  6 12:27:57 2025] 192.168.10.117:58180 Closing
+[Mon Oct  6 12:27:57 2025] 192.168.10.117:60464 Accepted
+[Mon Oct  6 12:27:57 2025] 192.168.10.117:64480 Closing
+[Mon Oct  6 12:27:57 2025] 192.168.10.117:63698 Accepted
+[Mon Oct  6 12:27:57 2025] 192.168.10.117:60464 Closing
+[Mon Oct  6 12:27:57 2025] 192.168.10.117:59345 Accepted
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:63698 Closing
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:59859 Closing
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:63363 Closing
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:62044 Accepted
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:59345 [200]: GET /storage/recordings/call_1758994572_68d8208cbdb5d.3gp
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:56522 Accepted
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:62044 Closing
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:63095 Accepted
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:56522 Closing
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:65031 Accepted
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:63095 [200]: GET /storage/recordings/call_1758994587_68d8209b94ff8.3gp
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:51083 Accepted
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:65031 Closing
+[Mon Oct  6 12:27:58 2025] 192.168.10.117:61377 Accepted
+[Mon Oct  6 12:27:59 2025] 192.168.10.117:51083 Closing
+[Mon Oct  6 12:27:59 2025] 192.168.10.117:59407 Accepted
+[Mon Oct  6 12:27:59 2025] 192.168.10.117:61377 Closing
+[Mon Oct  6 12:27:59 2025] 192.168.10.117:59345 Closing
+[Mon Oct  6 12:27:59 2025] 192.168.10.117:64750 Accepted
+[Mon Oct  6 12:27:59 2025] 192.168.10.117:59407 Closing
+[Mon Oct  6 12:27:59 2025] 192.168.10.117:51852 Accepted
+[Mon Oct  6 12:28:00 2025] 192.168.10.117:64750 Closing
+[Mon Oct  6 12:28:00 2025] 192.168.10.117:59677 Accepted
+[Mon Oct  6 12:28:00 2025] 192.168.10.117:51852 Closing
+[Mon Oct  6 12:28:00 2025] 192.168.10.117:63095 Closing
+[Mon Oct  6 12:28:00 2025] 192.168.10.117:54675 Accepted
+[Mon Oct  6 12:28:00 2025] 192.168.10.117:59677 Closing
+[Mon Oct  6 12:28:00 2025] 192.168.10.117:54683 Accepted
+[Mon Oct  6 12:28:00 2025] 192.168.10.117:54675 Closing
+[Mon Oct  6 12:28:00 2025] 192.168.10.117:52385 Accepted
+[Mon Oct  6 12:28:00 2025] 192.168.10.117:54683 [200]: GET /storage/recordings/call_1758994928_68d821f0ab809.3gp
+[Mon Oct  6 12:28:00 2025] 192.168.10.117:59906 Accepted
+[Mon Oct  6 12:28:01 2025] 192.168.10.117:52385 Closing
+[Mon Oct  6 12:28:01 2025] 192.168.10.117:65369 Accepted
+[Mon Oct  6 12:28:01 2025] 192.168.10.117:59906 Closing
+[Mon Oct  6 12:28:01 2025] 192.168.10.117:58670 Accepted
+[Mon Oct  6 12:28:01 2025] 192.168.10.117:65369 Closing
+[Mon Oct  6 12:28:01 2025] 192.168.10.117:61741 Accepted
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:58670 Closing
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:55352 Accepted
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:61741 [200]: GET /storage/recordings/call_1758994572_68d8208cbdb5d.3gp
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:52891 Accepted
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:55352 [200]: GET /storage/recordings/call_1758994587_68d8209b94ff8.3gp
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:54683 Closing
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:52891 [200]: GET /favicon.ico
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:52891 Closing
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:61741 Closing
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:53903 Accepted
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:55352 Closing
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:56063 Accepted
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:53903 [200]: GET /favicon.ico
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:56063 [200]: GET /storage/recordings/call_1758994928_68d821f0ab809.3gp
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:53903 Closing
+[Mon Oct  6 12:28:02 2025] 192.168.10.117:56063 Closing

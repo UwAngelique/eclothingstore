@@ -14,7 +14,7 @@ include __DIR__ . '/db.php';
 
 // Get current page from URL
 $current_page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
-$allowed_pages = ['dashboard', 'inventory', 'orders', 'customers', 'enquiries', 'reviews', 'coupons', 'reports'];
+$allowed_pages = ['dashboard', 'inventory', 'orders', 'customers', 'enquiries', 'reviews', 'discount', 'reports'];
 
 // Validate page parameter
 if (!in_array($current_page, $allowed_pages)) {
@@ -128,7 +128,7 @@ $page_titles = [
     'customers' => 'Customer Management',
     'enquiries' => 'Customer Enquiries',
     'reviews' => 'Customer Reviews',
-    'coupons' => 'Coupons Management',
+    'discount' => 'discount Management',
     'reports' => 'Sales Reports'
 ];
 
@@ -598,7 +598,7 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
                     <li><a href="index.php?page=customers" class="nav-link <?php echo $current_page == 'customers' ? 'active' : ''; ?>"><i class="fas fa-users"></i><span>Customers</span></a></li>
                     <li><a href="index.php?page=enquiries" class="nav-link <?php echo $current_page == 'enquiries' ? 'active' : ''; ?>"><i class="fas fa-envelope"></i><span>Enquiries</span></a></li>
                     <li><a href="index.php?page=reviews" class="nav-link <?php echo $current_page == 'reviews' ? 'active' : ''; ?>"><i class="fas fa-star"></i><span>Reviews</span></a></li>
-                    <li><a href="index.php?page=coupons" class="nav-link <?php echo $current_page == 'coupons' ? 'active' : ''; ?>"><i class="fas fa-ticket-alt"></i><span>Coupons</span></a></li>
+                    <li><a href="index.php?page=discount" class="nav-link <?php echo $current_page == 'discountss' ? 'active' : ''; ?>"><i class="fas fa-ticket-alt"></i><span>discount</span></a></li>
                     <li><a href="index.php?page=reports" class="nav-link <?php echo $current_page == 'reports' ? 'active' : ''; ?>"><i class="fas fa-chart-bar"></i><span>Reports</span></a></li>
                 </ul>
             </div>
