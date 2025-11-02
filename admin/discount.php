@@ -1092,7 +1092,7 @@ $stats = getPromotionStatistics($conn);
                                 <th>Product</th>
                                 <th>Category</th>
                                 <th>Original Price</th>
-                                <th>Discount %</th>
+                                <th>Discount % OFF</th>
                                 <th>Sale Price</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -1142,7 +1142,7 @@ $stats = getPromotionStatistics($conn);
                                     </td>
                                     <td>
                                         <?php if ($hasDiscount): ?>
-                                            <span class="discount-badge" style="font-size: 0.8rem;"><?= $discountPercentage ?>% OFF</span>
+                                            <span class="discount-badge" style="font-size: 0.8rem;"><?= $discountPercentage ?>% </span>
                                         <?php else: ?>
                                             <span class="text-muted">No discount</span>
                                         <?php endif; ?>

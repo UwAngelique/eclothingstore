@@ -1,16 +1,7 @@
 <?php
-// Database configuration
-// $host = 'localhost';
-// $dbname = 'agmsdb';
-// $username = 'root';
-// $password = 'yego';
-include __DIR__ . '/db.php';
-// try {
-//     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-//     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-// } catch(PDOException $e) {
-//     die("Connection failed: " . $e->getMessage());
-// }
+// index.php - Main dashboard with authentication and responsive sidebar
+require_once 'auth_check.php'; // Check if user is logged in
+require_once 'db.php'; // Database connection
 
 // Get current page from URL
 $current_page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
@@ -82,38 +73,23 @@ function getDynamicStats($pdo, $available_tables, $date_from, $date_to) {
         }
     }
     
-    // foreach (['customers', 'customer', 'users', 'clients'] as $table) {
-    //     if (in_array($table, $available_tables)) {
-    //         $stats['total_customers'] = $pdo->query("SELECT COUNT(*) FROM $table")->fetchColumn();
-    //         try {
-    //             $stmt = $pdo->prepare("SELECT COUNT(*) FROM $table WHERE DATE(created_at) BETWEEN ? AND ?");
-    //             $stmt->execute([$date_from, $date_to]);
-    //             $stats['new_customers'] = $stmt->fetchColumn();
-    //         } catch (Exception $e) {
-    //             $stats['new_customers'] = 0;
-    //         }
-    //         break;
-    //     }
-    // }
     if (in_array('orders', $available_tables)) {
-    try {
-        // Total unique customers who have placed at least one order
-        $stmt = $pdo->query("SELECT COUNT(DISTINCT customer_email) FROM orders");
-        $stats['total_customers'] = $stmt->fetchColumn();
+        try {
+            $stmt = $pdo->query("SELECT COUNT(DISTINCT customer_email) FROM orders");
+            $stats['total_customers'] = $stmt->fetchColumn();
 
-        // Unique customers within selected date range
-        $stmt = $pdo->prepare("
-            SELECT COUNT(DISTINCT customer_email)
-            FROM orders
-            WHERE DATE(created_at) BETWEEN ? AND ?
-        ");
-        $stmt->execute([$date_from, $date_to]);
-        $stats['new_customers'] = $stmt->fetchColumn();
-    } catch (Exception $e) {
-        $stats['total_customers'] = 0;
-        $stats['new_customers'] = 0;
+            $stmt = $pdo->prepare("
+                SELECT COUNT(DISTINCT customer_email)
+                FROM orders
+                WHERE DATE(created_at) BETWEEN ? AND ?
+            ");
+            $stmt->execute([$date_from, $date_to]);
+            $stats['new_customers'] = $stmt->fetchColumn();
+        } catch (Exception $e) {
+            $stats['total_customers'] = 0;
+            $stats['new_customers'] = 0;
+        }
     }
-}
     return $stats;
 }
 
@@ -128,7 +104,7 @@ $page_titles = [
     'customers' => 'Customer Management',
     'enquiries' => 'Customer Enquiries',
     'reviews' => 'Customer Reviews',
-    'discount' => 'discount Management',
+    'discount' => 'Discount Management',
     'reports' => 'Sales Reports'
 ];
 
@@ -157,6 +133,53 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
             min-height: 100vh;
         }
 
+        /* Mobile Menu Toggle Button */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1.5rem;
+            left: 1rem;
+            z-index: 1001;
+            background: #6366f1;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .mobile-menu-toggle:hover {
+            background: #4f46e5;
+            transform: scale(1.05);
+        }
+
+        .mobile-menu-toggle i {
+            font-size: 1.2rem;
+        }
+
+        /* Sidebar Overlay for Mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            opacity: 1;
+        }
+
         .sidebar { 
             width: 260px !important; 
             background: #ffffff !important;
@@ -166,6 +189,7 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
             z-index: 1000 !important; 
             overflow-y: auto !important;
             box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.02) !important;
+            transition: transform 0.3s ease !important;
         }
 
         .sidebar::-webkit-scrollbar {
@@ -256,6 +280,7 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
             margin-left: 260px !important; 
             flex: 1 !important;
             background: transparent !important;
+            transition: margin-left 0.3s ease !important;
         }
 
         .topbar { 
@@ -267,7 +292,7 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
             align-items: center !important; 
             position: sticky !important; 
             top: 0 !important; 
-            z-index: 999 !important;
+            z-index: 998 !important;
         }
 
         .topbar h4 { 
@@ -286,6 +311,12 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
             margin-top: 0.25rem;
         }
 
+        .topbar .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
         .topbar .btn {
             background: #6366f1 !important;
             border: none !important;
@@ -295,10 +326,28 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
             font-weight: 600 !important;
             font-size: 0.875rem;
             transition: all 0.2s ease !important;
+            cursor: pointer;
         }
 
         .topbar .btn:hover {
             background: #4f46e5 !important;
+            transform: translateY(-1px);
+        }
+
+        .logout-btn {
+            background: #ef4444 !important;
+            border: none !important;
+            color: white !important;
+            padding: 0.625rem 1.25rem !important;
+            border-radius: 0.5rem !important;
+            font-weight: 600 !important;
+            font-size: 0.875rem;
+            transition: all 0.2s ease !important;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626 !important;
             transform: translateY(-1px);
         }
 
@@ -540,51 +589,104 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
             transform: translateX(2px);
         }
 
+        /* Mobile Responsive Styles */
         @media (max-width: 991px) {
             .col-lg-4 { 
                 flex: 0 0 50% !important; 
                 max-width: 50% !important; 
-            }
+        }
         }
 
         @media (max-width: 767px) {
+            .mobile-menu-toggle {
+                display: flex !important;
+            }
+
             .sidebar { 
                 transform: translateX(-100%) !important; 
             }
+
+            .sidebar.show {
+                transform: translateX(0) !important;
+            }
+
+            .sidebar-overlay.show {
+                display: block !important;
+            }
+
             .main-content { 
                 margin-left: 0 !important; 
             }
+
             .col-md-6 { 
                 flex: 0 0 100% !important; 
-                max-width: 100% !important; 
+                max-width: 100% !important;
             }
+
             .topbar {
                 padding: 1.25rem 1.5rem !important;
+                padding-left: 4rem !important; /* Space for mobile menu button */
             }
+
+            .topbar h4 {
+                font-size: 1.1rem !important;
+            }
+
+            .topbar .user-menu {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-end;
+            }
+
             .content {
                 padding: 1.5rem !important;
             }
+
             .stat-value {
                 font-size: 1.75rem !important;
             }
+
             .stat-icon {
                 width: 48px !important;
                 height: 48px !important;
                 font-size: 1.25rem !important;
             }
+
             .date-filter-form {
                 flex-direction: column !important;
                 align-items: stretch !important;
             }
+
             .date-input-group {
                 min-width: 100% !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .topbar .btn,
+            .logout-btn {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.75rem !important;
+            }
+
+            .topbar .btn i,
+            .logout-btn i {
+                margin-right: 0.25rem !important;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Mobile Menu Toggle Button -->
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
     <div class="d-flex">
-        <nav class="sidebar">
+        <nav class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <a href="index.php?page=dashboard" class="logo">
                     <i class="fas fa-spa"></i><span>Shades Beauty</span>
@@ -592,14 +694,14 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
             </div>
             <div class="sidebar-nav">
                 <ul>
-                    <li><a href="index.php?page=dashboard" class="nav-link <?php echo $current_page == 'dashboard' ? 'active' : ''; ?>"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-                    <li><a href="index.php?page=inventory" class="nav-link <?php echo $current_page == 'inventory' ? 'active' : ''; ?>"><i class="fas fa-boxes"></i><span>Inventory</span></a></li>
-                    <li><a href="index.php?page=orders" class="nav-link <?php echo $current_page == 'orders' ? 'active' : ''; ?>"><i class="fas fa-shopping-cart"></i><span>Orders</span></a></li>
-                    <li><a href="index.php?page=customers" class="nav-link <?php echo $current_page == 'customers' ? 'active' : ''; ?>"><i class="fas fa-users"></i><span>Customers</span></a></li>
-                    <li><a href="index.php?page=enquiries" class="nav-link <?php echo $current_page == 'enquiries' ? 'active' : ''; ?>"><i class="fas fa-envelope"></i><span>Enquiries</span></a></li>
-                    <li><a href="index.php?page=reviews" class="nav-link <?php echo $current_page == 'reviews' ? 'active' : ''; ?>"><i class="fas fa-star"></i><span>Reviews</span></a></li>
-                    <li><a href="index.php?page=discount" class="nav-link <?php echo $current_page == 'discountss' ? 'active' : ''; ?>"><i class="fas fa-ticket-alt"></i><span>discount</span></a></li>
-                    <li><a href="index.php?page=reports" class="nav-link <?php echo $current_page == 'reports' ? 'active' : ''; ?>"><i class="fas fa-chart-bar"></i><span>Reports</span></a></li>
+                    <li><a href="index.php?page=dashboard" class="nav-link <?php echo $current_page == 'dashboard' ? 'active' : ''; ?>" onclick="closeSidebarOnMobile()"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+                    <li><a href="index.php?page=inventory" class="nav-link <?php echo $current_page == 'inventory' ? 'active' : ''; ?>" onclick="closeSidebarOnMobile()"><i class="fas fa-boxes"></i><span>Inventory</span></a></li>
+                    <li><a href="index.php?page=orders" class="nav-link <?php echo $current_page == 'orders' ? 'active' : ''; ?>" onclick="closeSidebarOnMobile()"><i class="fas fa-shopping-cart"></i><span>Orders</span></a></li>
+                    <li><a href="index.php?page=customers" class="nav-link <?php echo $current_page == 'customers' ? 'active' : ''; ?>" onclick="closeSidebarOnMobile()"><i class="fas fa-users"></i><span>Customers</span></a></li>
+                    <li><a href="index.php?page=enquiries" class="nav-link <?php echo $current_page == 'enquiries' ? 'active' : ''; ?>" onclick="closeSidebarOnMobile()"><i class="fas fa-envelope"></i><span>Enquiries</span></a></li>
+                    <li><a href="index.php?page=reviews" class="nav-link <?php echo $current_page == 'reviews' ? 'active' : ''; ?>" onclick="closeSidebarOnMobile()"><i class="fas fa-star"></i><span>Reviews</span></a></li>
+                    <li><a href="index.php?page=discount" class="nav-link <?php echo $current_page == 'discount' ? 'active' : ''; ?>" onclick="closeSidebarOnMobile()"><i class="fas fa-ticket-alt"></i><span>Discount</span></a></li>
+                    <li><a href="index.php?page=reports" class="nav-link <?php echo $current_page == 'reports' ? 'active' : ''; ?>" onclick="closeSidebarOnMobile()"><i class="fas fa-chart-bar"></i><span>Reports</span></a></li>
                 </ul>
             </div>
         </nav>
@@ -617,9 +719,12 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
                     </h4>
                     <small id="currentDate"></small>
                 </div>
-                <div>
+                <div class="user-menu">
                     <button class="btn">
-                        <i class="fas fa-user me-2"></i>Admin
+                        <i class="fas fa-user me-2"></i><?php echo htmlspecialchars($logged_in_username); ?>
+                    </button>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
                     </button>
                 </div>
             </div>
@@ -643,22 +748,12 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
                                     <i class="fas fa-search me-2"></i>Filter
                                 </button>
                             </div>
-                            <?php if($filter_applied): ?>
-                            <!-- <div>
-                                <a href="index.php?page=dashboard" class="reset-btn">
-                                    <i class="fas fa-redo me-2"></i>Reset
-                                </a>
-                            </div> -->
-                            <?php endif; ?>
                         </form>
                         <div class="current-range">
                             <i class="fas fa-info-circle me-2"></i>
-                            <!-- Showing data from <strong><?php //echo date('M j, Y', strtotime($date_from)); ?></strong> to 
-                             <strong><?php //echo date('M j, Y', strtotime($date_to)); ?></strong> -->
-                            <?php //if(!$filter_applied): ?>
-                            <!-- <span style="color: #6366f1; font-weight: 600;"> (Default: Current Month)</span> -->
-                            <?php //endif; ?>
-                        <!-- </div> -->
+                            Showing data from <strong><?php echo date('M j, Y', strtotime($date_from)); ?></strong> to 
+                            <strong><?php echo date('M j, Y', strtotime($date_to)); ?></strong>
+                        </div>
                     </div>
 
                     <div class="row">
@@ -714,8 +809,10 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Update date/time
         function updateDateTime() {
             const now = new Date();
             const options = {
@@ -731,6 +828,58 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
         updateDateTime();
         setInterval(updateDateTime, 60000);
 
+        // Mobile Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('show');
+        }
+
+        function closeSidebarOnMobile() {
+            if (window.innerWidth <= 767) {
+                const sidebar = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+            }
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (window.innerWidth <= 767 && 
+                !sidebar.contains(event.target) && 
+                !toggle.contains(event.target) &&
+                sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+            }
+        });
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                $.ajax({
+                    url: 'ajax.php?action=logout',
+                    method: 'POST',
+                    success: function(resp) {
+                        if(resp == 1) {
+                            window.location.href = 'login.php';
+                        }
+                    },
+                    error: function() {
+                        window.location.href = 'login.php';
+                    }
+                });
+            }
+        }
+
         // Validate date range
         const filterForm = document.getElementById('filterForm');
         if (filterForm) {
@@ -745,7 +894,6 @@ $page_title = $page_titles[$current_page] ?? 'Shades Beauty Admin';
                 }
             });
 
-            // Update To Date minimum when From Date changes
             const dateFrom = document.getElementById('date_from');
             const dateTo = document.getElementById('date_to');
             
