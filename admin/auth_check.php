@@ -7,14 +7,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Check if user is logged in (checking for 'login_id' which your system uses)
 if (!isset($_SESSION['login_id'])) {
-    // User is not logged in, redirect to login page
     header("Location: login.php");
     exit();
 }
 
-// Optional: Check session timeout (30 minutes of inactivity)
 $timeout_duration = 1800; // 30 minutes in seconds
 
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout_duration) {

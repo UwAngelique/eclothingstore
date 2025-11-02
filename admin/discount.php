@@ -1,16 +1,10 @@
 <?php
-// discount_promotion_content.php - RWF Currency Version
-// Headers-safe version - uses JavaScript redirects only
-
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 include 'db_connect.php';
 include 'discount_functions.php';
-
-// Helper function for safe redirects - JavaScript only (no headers)
 function safe_redirect($url) {
-    // Always use JavaScript redirect since headers are already sent by index.php
     echo '<script type="text/javascript">window.location.href="' . htmlspecialchars($url, ENT_QUOTES) . '";</script>';
     echo '<noscript><meta http-equiv="refresh" content="0;url=' . htmlspecialchars($url, ENT_QUOTES) . '" /></noscript>';
     exit();
